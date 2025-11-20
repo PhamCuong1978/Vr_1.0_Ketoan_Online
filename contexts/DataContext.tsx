@@ -23,13 +23,73 @@ interface DataProviderProps {
   children: ReactNode;
 }
 
+// Keys for LocalStorage
+const STORAGE_KEYS = {
+  COMPANY: 'ketoan_company_info',
+  TRANSACTIONS: 'ketoan_transactions',
+  PARTNERS: 'ketoan_partners',
+  PRODUCTS: 'ketoan_products',
+  ACCOUNTS: 'ketoan_accounts',
+  LEGAL_DOCS: 'ketoan_legal_docs'
+};
+
+// Helper to load data from localStorage or fall back to mock data
+const loadFromStorage = <T,>(key: string, fallback: T): T => {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
+  } catch (error) {
+    console.error(`Error loading key ${key} from storage`, error);
+    return fallback;
+  }
+};
+
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(INITIAL_COMPANY_INFO);
-  const [transactions, setTransactions] = useState<Transaction[]>(MOCK_TRANSACTIONS);
-  const [partners, setPartners] = useState<Partner[]>(MOCK_PARTNERS);
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
-  const [accounts, setAccounts] = useState<Account[]>(MOCK_ACCOUNTS);
-  const [legalDocuments, setLegalDocuments] = useState<LegalDocument[]>(MOCK_LEGAL_DOCUMENTS);
+  // Initialize state from LocalStorage
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(() => 
+    loadFromStorage(STORAGE_KEYS.COMPANY, INITIAL_COMPANY_INFO)
+  );
+  const [transactions, setTransactions] = useState<Transaction[]>(() => 
+    loadFromStorage(STORAGE_KEYS.TRANSACTIONS, MOCK_TRANSACTIONS)
+  );
+  const [partners, setPartners] = useState<Partner[]>(() => 
+    loadFromStorage(STORAGE_KEYS.PARTNERS, MOCK_PARTNERS)
+  );
+  const [products, setProducts] = useState<Product[]>(() => 
+    loadFromStorage(STORAGE_KEYS.PRODUCTS, MOCK_PRODUCTS)
+  );
+  const [accounts, setAccounts] = useState<Account[]>(() => 
+    loadFromStorage(STORAGE_KEYS.ACCOUNTS, MOCK_ACCOUNTS)
+  );
+  const [legalDocuments, setLegalDocuments] = useState<LegalDocument[]>(() => 
+    loadFromStorage(STORAGE_KEYS.LEGAL_DOCS, MOCK_LEGAL_DOCUMENTS)
+  );
+
+  // Effects to save data whenever it changes
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.COMPANY, JSON.stringify(companyInfo));
+  }, [companyInfo]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
+  }, [transactions]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.PARTNERS, JSON.stringify(partners));
+  }, [partners]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
+  }, [products]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(accounts));
+  }, [accounts]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.LEGAL_DOCS, JSON.stringify(legalDocuments));
+  }, [legalDocuments]);
+
 
   const updateCompanyInfo = (info: Partial<CompanyInfo>) => {
     setCompanyInfo(prev => ({ ...prev, ...info }));

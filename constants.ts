@@ -158,27 +158,4 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
   }
 ];
 
-export const MOCK_LEGAL_DOCUMENTS: LegalDocument[] = [
-  {
-    id: '1',
-    number: '200/2014/TT-BTC',
-    name: 'Thông tư hướng dẫn Chế độ kế toán Doanh nghiệp',
-    type: 'Thông tư',
-    issueDate: '2014-12-22',
-    effectiveDate: '2015-01-01',
-    issuingAuthority: 'Bộ Tài chính',
-    content: 'Hướng dẫn việc ghi sổ kế toán, lập báo cáo tài chính đối với các doanh nghiệp thuộc mọi lĩnh vực, mọi thành phần kinh tế.',
-    status: 'ACTIVE'
-  },
-  {
-    id: '2',
-    number: '88/2015/NĐ-CP',
-    name: 'Nghị định về xử phạt vi phạm hành chính trong lĩnh vực kế toán, kiểm toán độc lập',
-    type: 'Nghị định',
-    issueDate: '2015-10-07',
-    effectiveDate: '2015-12-01',
-    issuingAuthority: 'Chính phủ',
-    content: 'Quy định về các hành vi vi phạm, hình thức xử phạt và mức phạt đối với các vi phạm trong lĩnh vực kế toán.',
-    status: 'ACTIVE'
-  }
-];
+export const MOCK_LEGAL_DOCUMENTS: LegalDocument[] = [];
