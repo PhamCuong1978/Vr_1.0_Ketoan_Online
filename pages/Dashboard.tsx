@@ -1,28 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { INITIAL_COMPANY_INFO, MOCK_TRANSACTIONS } from '../constants';
-import { analyzeFinancials } from '../services/geminiService';
-import { Brain, TrendingUp, TrendingDown, DollarSign, AlertCircle, Landmark } from 'lucide-react';
+
+import React, { useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Brain, TrendingUp, TrendingDown, DollarSign, Landmark } from 'lucide-react';
 import { TransactionType } from '../types';
+import { useData } from '../contexts/DataContext';
 
 const Dashboard: React.FC = () => {
-  const [aiAnalysis, setAiAnalysis] = useState<string>('');
-  const [loadingAi, setLoadingAi] = useState(false);
+  // Access real-time data from Context
+  const { transactions, companyInfo } = useData();
 
-  // Mock calculations for dashboard
-  const totalRevenue = MOCK_TRANSACTIONS.filter(t => t.type === TransactionType.SALES).reduce((acc, cur) => acc + cur.totalAmount, 0);
-  const totalExpense = MOCK_TRANSACTIONS.filter(t => t.type === TransactionType.PAYMENT).reduce((acc, cur) => acc + cur.totalAmount, 0); // Simplified
-  const cashBalance = 150000000; // Mock balance
-  const bankBalance = 850000000; // Mock balance
+  // Calculate real-time metrics
+  const totalRevenue = transactions
+    .filter(t => t.type === TransactionType.SALES || t.type === TransactionType.RECEIPT)
+    .reduce((acc, cur) => acc + cur.totalAmount, 0);
+
+  const totalExpense = transactions
+    .filter(t => t.type === TransactionType.PAYMENT || t.type === TransactionType.PURCHASE)
+    .reduce((acc, cur) => acc + cur.totalAmount, 0);
+  
+  // Mock Balances (In a real app, these would be calculated from opening balance + transactions)
+  const cashBalance = 150000000 + (totalRevenue * 0.3) - (totalExpense * 0.4);
+  const bankBalance = 850000000 + (totalRevenue * 0.7) - (totalExpense * 0.6);
 
   const chartData = [
-    { name: 'T1', thu: 400, chi: 240 },
-    { name: 'T2', thu: 300, chi: 139 },
-    { name: 'T3', thu: 200, chi: 980 },
-    { name: 'T4', thu: 278, chi: 390 },
-    { name: 'T5', thu: 189, chi: 480 },
-    { name: 'T6', thu: 239, chi: 380 },
-    { name: 'T7', thu: 349, chi: 430 },
+    { name: 'T1', thu: 40000000, chi: 24000000 },
+    { name: 'T2', thu: 30000000, chi: 13900000 },
+    { name: 'T3', thu: 20000000, chi: 98000000 },
+    { name: 'T4', thu: 27800000, chi: 39000000 },
+    { name: 'HT', thu: totalRevenue, chi: totalExpense }, // Current Month
   ];
 
   const pieData = [
@@ -33,27 +38,12 @@ const Dashboard: React.FC = () => {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-  const handleAnalyze = async () => {
-    setLoadingAi(true);
-    const summary = JSON.stringify({
-      company: INITIAL_COMPANY_INFO.name,
-      revenue: totalRevenue,
-      expense: totalExpense,
-      cash: cashBalance,
-      bank: bankBalance,
-      recentTransactionsCount: MOCK_TRANSACTIONS.length,
-    });
-    const result = await analyzeFinancials(summary);
-    setAiAnalysis(result);
-    setLoadingAi(false);
-  };
-
   return (
     <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Tổng quan tài chính</h1>
-          <p className="text-gray-500">Chào mừng trở lại, {INITIAL_COMPANY_INFO.director}</p>
+          <p className="text-gray-500">Chào mừng trở lại, {companyInfo.director}</p>
         </div>
         <div className="flex space-x-2">
           <button className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50">Làm mới</button>
@@ -99,7 +89,7 @@ const Dashboard: React.FC = () => {
               <DollarSign size={24} />
             </div>
           </div>
-          <span className="text-xs text-gray-400 font-medium mt-2 inline-block">Cập nhật 5 phút trước</span>
+          <span className="text-xs text-gray-400 font-medium mt-2 inline-block">Cập nhật vừa xong</span>
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -172,40 +162,18 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* AI Assistant Section */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
-            <Brain size={32} />
+      {/* AI Promotion Banner (Static, actual AI is in the floating button now) */}
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
+        <div className="absolute right-0 top-0 h-full w-1/3 bg-white/5 -skew-x-12"></div>
+        <div className="flex items-start gap-4 relative z-10">
+          <div className="p-3 bg-blue-500/20 rounded-lg backdrop-blur-sm border border-blue-500/30">
+            <Brain size={32} className="text-blue-400" />
           </div>
           <div className="flex-1">
-            <h3 className="text-xl font-bold mb-2">Trợ lý Kế toán trưởng AI</h3>
-            <p className="text-indigo-100 mb-4 text-sm">Sử dụng trí tuệ nhân tạo để phân tích dữ liệu tài chính, phát hiện rủi ro và đề xuất tối ưu hóa dòng tiền cho doanh nghiệp của bạn.</p>
-
-            {!aiAnalysis ? (
-              <button
-                onClick={handleAnalyze}
-                disabled={loadingAi}
-                className="px-5 py-2 bg-white text-indigo-600 font-semibold rounded-lg shadow-md hover:bg-indigo-50 transition-colors disabled:opacity-70 flex items-center gap-2"
-              >
-                {loadingAi ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Đang phân tích...
-                  </>
-                ) : (
-                  "Bắt đầu phân tích"
-                )}
-              </button>
-            ) : (
-               <div className="bg-white/10 rounded-lg p-4 mt-2 backdrop-blur-sm border border-white/20 prose prose-invert max-w-none text-sm">
-                  <div dangerouslySetInnerHTML={{ __html: aiAnalysis.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
-                  <button onClick={() => setAiAnalysis('')} className="mt-4 text-xs text-indigo-200 hover:text-white underline">Phân tích lại</button>
-               </div>
-            )}
+            <h3 className="text-xl font-bold mb-2">Trợ lý Kế toán AI đã sẵn sàng</h3>
+            <p className="text-slate-300 text-sm max-w-xl">
+                Sử dụng nút chat ở góc phải màn hình để tương tác với trợ lý ảo. Hỗ trợ nhập liệu bằng giọng nói, phân tích báo cáo và tự động hóa quy trình kế toán.
+            </p>
           </div>
         </div>
       </div>

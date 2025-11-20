@@ -25,7 +25,8 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(['operations', 'reports', 'categories']);
+  // Thay đổi trạng thái mặc định: [] để đóng tất cả các menu con lúc ban đầu
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
 
   const toggleMenu = (id: string) => {
     setExpandedMenus(prev =>

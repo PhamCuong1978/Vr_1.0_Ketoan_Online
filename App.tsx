@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
@@ -6,6 +7,8 @@ import Operations from './pages/Operations';
 import Categories from './pages/Categories';
 import Reports from './pages/Reports';
 import System from './pages/System';
+import AIAssistant from './components/AIAssistant';
+import { DataProvider } from './contexts/DataContext';
 import { Menu } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -15,49 +18,62 @@ const App: React.FC = () => {
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (
-    <Router>
-      <div className="flex h-screen overflow-hidden bg-gray-100">
-        {/* Sidebar */}
-        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+    <DataProvider>
+      <Router>
+        <div className="flex h-screen overflow-hidden bg-gray-100 font-inter">
+          {/* Sidebar */}
+          <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden relative transition-all duration-300">
-          {/* Top Header for Navigation Toggle */}
-          <header className="bg-white h-16 shadow-sm z-10 flex items-center px-4 sticky top-0">
-            <button 
-              onClick={toggleSidebar} 
-              className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-              title="Ẩn/Hiện Menu"
-            >
-              <Menu size={24} />
-            </button>
-            {/* Placeholder for breadcrumbs or page title if needed later */}
-            <div className="ml-4 font-medium text-gray-500 hidden sm:block">
-              Hệ thống Kế toán Online
-            </div>
-          </header>
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col overflow-hidden relative transition-all duration-300">
+            {/* Top Header for Navigation Toggle */}
+            <header className="bg-white h-16 shadow-sm z-10 flex items-center px-4 sticky top-0 justify-between">
+              <div className="flex items-center">
+                <button 
+                  onClick={toggleSidebar} 
+                  className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  title="Ẩn/Hiện Menu"
+                >
+                  <Menu size={24} />
+                </button>
+                {/* Placeholder for breadcrumbs or page title if needed later */}
+                <div className="ml-4 font-medium text-gray-500 hidden sm:block">
+                  Hệ thống Kế toán Online
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center bg-gray-100 rounded-full px-3 py-1">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  <span className="text-xs text-gray-600">Hệ thống hoạt động bình thường</span>
+                </div>
+              </div>
+            </header>
 
-          <main className="flex-1 overflow-y-auto">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/system" element={<System />} />
-              
-              {/* Operations Routes */}
-              <Route path="/operations/:module" element={<Operations />} />
-              
-              {/* Categories Routes */}
-              <Route path="/categories/:type" element={<Categories />} />
+            <main className="flex-1 overflow-y-auto bg-gray-50/50">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/system" element={<System />} />
+                
+                {/* Operations Routes */}
+                <Route path="/operations/:module" element={<Operations />} />
+                
+                {/* Categories Routes */}
+                <Route path="/categories/:type" element={<Categories />} />
 
-              {/* Reports Routes */}
-              <Route path="/reports/:type" element={<Reports />} />
+                {/* Reports Routes */}
+                <Route path="/reports/:type" element={<Reports />} />
 
-              {/* Default Redirect */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
+                {/* Default Redirect */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </main>
+            
+            {/* Advanced AI Assistant */}
+            <AIAssistant />
+          </div>
         </div>
-      </div>
-    </Router>
+      </Router>
+    </DataProvider>
   );
 };
 

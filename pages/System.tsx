@@ -1,13 +1,24 @@
-import React, { useState } from 'react';
-import { INITIAL_COMPANY_INFO } from '../constants';
+
+import React, { useState, useEffect } from 'react';
 import { Save, Building, UserCog, Shield } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
 
 const System: React.FC = () => {
-  const [company, setCompany] = useState(INITIAL_COMPANY_INFO);
+  const { companyInfo, updateCompanyInfo } = useData();
+  const [formState, setFormState] = useState(companyInfo);
   const [activeTab, setActiveTab] = useState<'company' | 'users' | 'options'>('company');
 
+  useEffect(() => {
+      setFormState(companyInfo);
+  }, [companyInfo]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCompany({ ...company, [e.target.name]: e.target.value });
+    setFormState({ ...formState, [e.target.name]: e.target.value });
+  };
+
+  const handleSave = () => {
+      updateCompanyInfo(formState);
+      alert("Đã lưu thông tin thành công!");
   };
 
   return (
@@ -42,27 +53,27 @@ const System: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Tên Doanh nghiệp</label>
-                  <input type="text" name="name" value={company.name} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  <input type="text" name="name" value={formState.name} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ trụ sở</label>
-                  <input type="text" name="address" value={company.address} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  <input type="text" name="address" value={formState.address} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Mã số thuế</label>
-                  <input type="text" name="taxCode" value={company.taxCode} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  <input type="text" name="taxCode" value={formState.taxCode} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Điện thoại</label>
-                  <input type="text" name="phone" value={company.phone} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  <input type="text" name="phone" value={formState.phone} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Giám đốc / Người đại diện</label>
-                  <input type="text" name="director" value={company.director} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  <input type="text" name="director" value={formState.director} onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
                 </div>
               </div>
               <div className="flex justify-end">
-                <button className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                <button onClick={handleSave} className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
                   <Save size={18} /> Lưu thông tin
                 </button>
               </div>
@@ -91,13 +102,6 @@ const System: React.FC = () => {
                       <p className="text-sm text-gray-500">Cảnh báo khi xuất quá số lượng tồn</p>
                    </div>
                    <input type="checkbox" className="w-5 h-5 text-blue-600 rounded" defaultChecked />
-                </div>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                   <div>
-                      <h4 className="font-medium text-gray-800">Đa tiền tệ</h4>
-                      <p className="text-sm text-gray-500">Kích hoạt hạch toán đa tiền tệ (USD, EUR...)</p>
-                   </div>
-                   <input type="checkbox" className="w-5 h-5 text-blue-600 rounded" />
                 </div>
              </div>
           )}

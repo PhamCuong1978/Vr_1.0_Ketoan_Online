@@ -1,100 +1,459 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Plus, Edit, Trash2, Search } from 'lucide-react';
-import { MOCK_ACCOUNTS, MOCK_PARTNERS, MOCK_PRODUCTS } from '../constants';
+import { Plus, Edit, Trash2, Search, X, Save, AlertCircle } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
+import { Account, Partner, Product } from '../types';
 
 const Categories: React.FC = () => {
   const { type } = useParams<{ type: string }>();
+  const { 
+    accounts, addAccount, updateAccount, deleteAccount,
+    partners, addPartner, updatePartner, deletePartner,
+    products, addProduct, updateProduct, deleteProduct
+  } = useData();
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [formData, setFormData] = useState<any>({});
+
+  // Reset state when route changes
+  useEffect(() => {
+    setSearchTerm('');
+    setIsModalOpen(false);
+    setEditingItem(null);
+    setFormData({});
+  }, [type]);
 
   let title = 'Danh mục';
-  let columns: string[] = [];
   let data: any[] = [];
+  let columns: string[] = [];
 
   // Config based on type
   switch (type) {
     case 'accounts':
       title = 'Hệ thống Tài khoản';
-      columns = ['Số TK', 'Tên tài khoản', 'Tính chất'];
-      data = MOCK_ACCOUNTS;
+      columns = ['Số TT', 'Số TK', 'Tên tài khoản', 'Tính chất']; // Columns handled manually for accounts
+      data = accounts.sort((a, b) => a.code.localeCompare(b.code));
       break;
     case 'partners':
       title = 'Khách hàng & Nhà cung cấp';
       columns = ['Mã', 'Tên đối tượng', 'Mã số thuế', 'Loại'];
-      data = MOCK_PARTNERS;
+      data = partners;
       break;
     case 'products':
       title = 'Vật tư hàng hóa';
       columns = ['Mã', 'Tên hàng', 'ĐVT', 'Đơn giá', 'Tồn kho'];
-      data = MOCK_PRODUCTS;
+      data = products;
       break;
     default:
       title = 'Danh mục chung';
       data = [];
   }
 
+  // Filtering
+  const filteredData = data.filter((item: any) => {
+     const searchLower = searchTerm.toLowerCase();
+     if (type === 'accounts') return item.code.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower);
+     if (type === 'partners') return (item.code?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower));
+     if (type === 'products') return (item.code?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower));
+     return false;
+  });
+
+  // Helper for Accounts Category Grouping
+  let lastCategory = '';
+  let sttCounter = 0;
+  const getCategoryLabel = (cat: string) => {
+      switch(cat) {
+          case 'ASSET': return 'LOẠI TÀI KHOẢN TÀI SẢN';
+          case 'LIABILITY': return 'LOẠI TÀI KHOẢN NỢ PHẢI TRẢ';
+          case 'EQUITY': return 'LOẠI TÀI KHOẢN VỐN CHỦ SỞ HỮU';
+          case 'REVENUE': return 'LOẠI TÀI KHOẢN DOANH THU';
+          case 'EXPENSE': return 'LOẠI TÀI KHOẢN CHI PHÍ';
+          default: return 'KHÁC';
+      }
+  };
+
+  // Actions
+  const handleAddNew = () => {
+    setEditingItem(null);
+    if (type === 'accounts') setFormData({ code: '', name: '', category: 'ASSET' });
+    else if (type === 'partners') setFormData({ code: '', name: '', type: 'CUSTOMER', taxCode: '', address: '', phone: '' });
+    else if (type === 'products') setFormData({ code: '', name: '', unit: 'Cái', price: 0, stock: 0 });
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (item: any) => {
+    setEditingItem(item);
+    setFormData({ ...item });
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (item: any) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa "${item.name}" không?`)) return;
+
+    if (type === 'accounts') deleteAccount(item.code);
+    else if (type === 'partners') deletePartner(item.id);
+    else if (type === 'products') deleteProduct(item.id);
+  };
+
+  const handleSave = () => {
+    // Validation simple
+    if (!formData.name) return alert("Vui lòng nhập tên!");
+    if (type === 'accounts' && !formData.code) return alert("Vui lòng nhập số tài khoản!");
+
+    if (type === 'accounts') {
+      if (editingItem) updateAccount(editingItem.code, formData);
+      else {
+        // Check duplicate
+        if (accounts.find(a => a.code === formData.code)) return alert("Số tài khoản đã tồn tại!");
+        addAccount(formData);
+      }
+    } else if (type === 'partners') {
+      if (editingItem) updatePartner(editingItem.id, formData);
+      else addPartner(formData);
+    } else if (type === 'products') {
+      if (editingItem) updateProduct(editingItem.id, formData);
+      else addProduct(formData);
+    }
+
+    setIsModalOpen(false);
+  };
+
   return (
     <div className="p-6 h-full flex flex-col">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 shrink-0">
         <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm">
+        <button 
+          onClick={handleAddNew}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm transition-colors"
+        >
           <Plus size={18} /> Thêm mới
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4">
+      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4 shrink-0">
         <div className="relative max-w-md">
            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-           <input type="text" placeholder="Tìm kiếm..." className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+           <input 
+             type="text" 
+             value={searchTerm}
+             onChange={(e) => setSearchTerm(e.target.value)}
+             placeholder="Tìm kiếm..." 
+             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" 
+           />
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex-1 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
-              <tr>
-                {columns.map((col, idx) => <th key={idx} className="px-6 py-3">{col}</th>)}
-                <th className="px-6 py-3 text-right">Thao tác</th>
-              </tr>
+      {/* Table Container */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex-1 overflow-hidden flex flex-col">
+        <div className="overflow-auto flex-1 relative custom-scrollbar">
+          <table className="w-full text-sm text-left border-collapse">
+            <thead className="bg-gray-100 text-gray-700 font-bold sticky top-0 z-10 shadow-sm">
+                {type === 'accounts' ? (
+                    <>
+                        <tr>
+                            <th rowSpan={2} className="px-3 py-2 border border-gray-300 text-center w-16">Số TT</th>
+                            <th colSpan={2} className="px-3 py-2 border border-gray-300 text-center">SỐ HIỆU TK</th>
+                            <th rowSpan={2} className="px-3 py-2 border border-gray-300 text-center">TÊN TÀI KHOẢN</th>
+                            <th rowSpan={2} className="px-3 py-2 border border-gray-300 text-center w-24">Thao tác</th>
+                        </tr>
+                        <tr>
+                            <th className="px-3 py-2 border border-gray-300 text-center w-24">Cấp 1</th>
+                            <th className="px-3 py-2 border border-gray-300 text-center w-24">Cấp 2</th>
+                        </tr>
+                    </>
+                ) : (
+                    <tr>
+                        {columns.map((col, idx) => <th key={idx} className="px-6 py-3 border border-gray-200 bg-gray-50">{col}</th>)}
+                        <th className="px-6 py-3 border border-gray-200 bg-gray-50 text-right">Thao tác</th>
+                    </tr>
+                )}
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {data.map((item: any, idx) => (
-                <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                  {type === 'accounts' && (
-                    <>
-                      <td className="px-6 py-4 font-medium">{item.code}</td>
-                      <td className="px-6 py-4">{item.name}</td>
-                      <td className="px-6 py-4"><span className="px-2 py-1 bg-gray-100 rounded text-xs">{item.category}</span></td>
-                    </>
-                  )}
-                  {type === 'partners' && (
-                    <>
-                      <td className="px-6 py-4 font-medium">{item.code}</td>
-                      <td className="px-6 py-4">{item.name}</td>
-                      <td className="px-6 py-4">{item.taxCode || '-'}</td>
-                      <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs ${item.type === 'CUSTOMER' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>{item.type}</span></td>
-                    </>
-                  )}
-                  {type === 'products' && (
-                    <>
-                      <td className="px-6 py-4 font-medium">{item.code}</td>
-                      <td className="px-6 py-4">{item.name}</td>
-                      <td className="px-6 py-4">{item.unit}</td>
-                      <td className="px-6 py-4 font-mono">{item.price.toLocaleString('vi-VN')}</td>
-                      <td className="px-6 py-4">{item.stock}</td>
-                    </>
-                  )}
+              {filteredData.length > 0 ? (
+                filteredData.map((item: any, idx: number) => {
+                  // Logic for Accounts Grouping Header
+                  let groupHeader = null;
+                  if (type === 'accounts' && item.category !== lastCategory) {
+                      lastCategory = item.category;
+                      groupHeader = (
+                          <tr key={`cat-${idx}`} className="bg-gray-50">
+                              <td className="border border-gray-300"></td>
+                              <td className="border border-gray-300"></td>
+                              <td className="border border-gray-300"></td>
+                              <td className="px-4 py-2 border border-gray-300 font-bold uppercase text-gray-800">
+                                  {getCategoryLabel(item.category)}
+                              </td>
+                              <td className="border border-gray-300"></td>
+                          </tr>
+                      );
+                  }
 
-                  <td className="px-6 py-4 text-right flex justify-end gap-2">
-                    <button className="p-1 text-blue-600 hover:bg-blue-50 rounded"><Edit size={16} /></button>
-                    <button className="p-1 text-red-600 hover:bg-red-50 rounded"><Trash2 size={16} /></button>
+                  // Logic for STT (Only for Level 1 accounts)
+                  let sttDisplay = '';
+                  if (type === 'accounts' && item.code.length === 3) {
+                      sttCounter++;
+                      sttDisplay = sttCounter.toString().padStart(2, '0');
+                  }
+
+                  return (
+                    <React.Fragment key={idx}>
+                        {groupHeader}
+                        <tr className={`hover:bg-blue-50 transition-colors group ${type === 'accounts' ? '' : 'border-b border-gray-200'}`}>
+                            {type === 'accounts' && (
+                            <>
+                                <td className="px-3 py-2 border border-gray-300 text-center font-medium text-gray-600">
+                                    {sttDisplay}
+                                </td>
+                                <td className="px-3 py-2 border border-gray-300 text-center font-bold text-gray-800">
+                                    {item.code.length === 3 ? item.code : ''}
+                                </td>
+                                <td className="px-3 py-2 border border-gray-300 text-center font-medium text-gray-600">
+                                    {item.code.length > 3 ? item.code : ''}
+                                </td>
+                                <td className={`px-3 py-2 border border-gray-300 font-medium text-gray-800 ${item.code.length === 3 ? 'font-bold' : ''}`}>
+                                    {item.name}
+                                </td>
+                            </>
+                            )}
+                            
+                            {type === 'partners' && (
+                            <>
+                                <td className="px-6 py-3 font-medium border border-gray-200">{item.code || 'AUTO'}</td>
+                                <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.name}</td>
+                                <td className="px-6 py-3 text-gray-500 border border-gray-200">{item.taxCode || '-'}</td>
+                                <td className="px-6 py-3 border border-gray-200">
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                    item.type === 'CUSTOMER' ? 'bg-blue-100 text-blue-700' : 
+                                    item.type === 'SUPPLIER' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700'
+                                }`}>
+                                    {item.type}
+                                </span>
+                                </td>
+                            </>
+                            )}
+
+                            {type === 'products' && (
+                            <>
+                                <td className="px-6 py-3 font-medium border border-gray-200">{item.code}</td>
+                                <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.name}</td>
+                                <td className="px-6 py-3 border border-gray-200">{item.unit}</td>
+                                <td className="px-6 py-3 font-mono text-gray-700 border border-gray-200">{item.price?.toLocaleString('vi-VN')}</td>
+                                <td className="px-6 py-3 font-medium text-blue-600 border border-gray-200">{item.stock}</td>
+                            </>
+                            )}
+
+                            <td className={`px-4 py-2 text-right ${type === 'accounts' ? 'border border-gray-300' : 'border border-gray-200'}`}>
+                            <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => handleEdit(item)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md transition-colors" title="Sửa">
+                                <Edit size={16} />
+                                </button>
+                                <button onClick={() => handleDelete(item)} className="p-1.5 text-red-600 hover:bg-red-100 rounded-md transition-colors" title="Xóa">
+                                <Trash2 size={16} />
+                                </button>
+                            </div>
+                            </td>
+                        </tr>
+                    </React.Fragment>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={type === 'accounts' ? 5 : columns.length + 1} className="px-6 py-12 text-center text-gray-400 border border-gray-200">
+                    <div className="flex flex-col items-center">
+                      <AlertCircle size={48} className="mb-2 text-gray-300" />
+                      <p>Không tìm thấy dữ liệu nào.</p>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
+        <div className="p-3 border-t border-gray-200 bg-gray-50 text-right text-xs text-gray-500">
+           Tổng số: {filteredData.length} bản ghi
+        </div>
       </div>
+
+      {/* MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
+              <h2 className="text-lg font-bold text-gray-800">
+                {editingItem ? 'Cập nhật' : 'Thêm mới'} {
+                  type === 'accounts' ? 'Tài khoản' : type === 'partners' ? 'Đối tác' : 'Sản phẩm'
+                }
+              </h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              {type === 'accounts' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Số Tài khoản <span className="text-red-500">*</span></label>
+                    <input 
+                      disabled={!!editingItem}
+                      value={formData.code || ''}
+                      onChange={e => setFormData({...formData, code: e.target.value})}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100"
+                      placeholder="VD: 111"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tên Tài khoản <span className="text-red-500">*</span></label>
+                    <input 
+                      value={formData.name || ''}
+                      onChange={e => setFormData({...formData, name: e.target.value})}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                      placeholder="VD: Tiền mặt"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tính chất</label>
+                    <select 
+                      value={formData.category || 'ASSET'}
+                      onChange={e => setFormData({...formData, category: e.target.value})}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                      <option value="ASSET">Tài sản (Đầu 1, 2)</option>
+                      <option value="LIABILITY">Nợ phải trả (Đầu 3)</option>
+                      <option value="EQUITY">Vốn chủ sở hữu (Đầu 4)</option>
+                      <option value="REVENUE">Doanh thu (Đầu 5, 7)</option>
+                      <option value="EXPENSE">Chi phí (Đầu 6, 8)</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {type === 'partners' && (
+                <>
+                   <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Mã đối tác</label>
+                        <input 
+                          value={formData.code || ''}
+                          onChange={e => setFormData({...formData, code: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                          placeholder="Tự động nếu để trống"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Loại</label>
+                        <select 
+                          value={formData.type || 'CUSTOMER'}
+                          onChange={e => setFormData({...formData, type: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                        >
+                          <option value="CUSTOMER">Khách hàng</option>
+                          <option value="SUPPLIER">Nhà cung cấp</option>
+                          <option value="EMPLOYEE">Nhân viên</option>
+                          <option value="OTHER">Khác</option>
+                        </select>
+                      </div>
+                   </div>
+                   <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Tên đối tác <span className="text-red-500">*</span></label>
+                      <input 
+                        value={formData.name || ''}
+                        onChange={e => setFormData({...formData, name: e.target.value})}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                   </div>
+                   <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Mã số thuế</label>
+                      <input 
+                        value={formData.taxCode || ''}
+                        onChange={e => setFormData({...formData, taxCode: e.target.value})}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                   </div>
+                   <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Điện thoại</label>
+                      <input 
+                        value={formData.phone || ''}
+                        onChange={e => setFormData({...formData, phone: e.target.value})}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                   </div>
+                   <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ</label>
+                      <input 
+                        value={formData.address || ''}
+                        onChange={e => setFormData({...formData, address: e.target.value})}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                   </div>
+                </>
+              )}
+
+              {type === 'products' && (
+                <>
+                   <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Mã hàng</label>
+                        <input 
+                          value={formData.code || ''}
+                          onChange={e => setFormData({...formData, code: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                          placeholder="Tự động nếu để trống"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Đơn vị tính</label>
+                        <input 
+                          value={formData.unit || ''}
+                          onChange={e => setFormData({...formData, unit: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                        />
+                      </div>
+                   </div>
+                   <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Tên hàng hóa <span className="text-red-500">*</span></label>
+                      <input 
+                        value={formData.name || ''}
+                        onChange={e => setFormData({...formData, name: e.target.value})}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                   </div>
+                   <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Đơn giá bán</label>
+                        <input 
+                          type="number"
+                          value={formData.price || 0}
+                          onChange={e => setFormData({...formData, price: Number(e.target.value)})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Tồn đầu kỳ</label>
+                        <input 
+                          type="number"
+                          value={formData.stock || 0}
+                          onChange={e => setFormData({...formData, stock: Number(e.target.value)})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                        />
+                      </div>
+                   </div>
+                </>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+              <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors">Hủy bỏ</button>
+              <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow-sm flex items-center gap-2 transition-colors">
+                <Save size={18} /> Lưu dữ liệu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

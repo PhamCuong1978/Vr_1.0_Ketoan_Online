@@ -1,5 +1,7 @@
 {
   "name": "Vr_1.0_Ketoan_Online",
   "description": "Hệ thống kế toán online toàn diện dành cho doanh nghiệp, tích hợp quản lý quỹ, ngân hàng, kho, nhân sự và báo cáo tài chính thông minh.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }

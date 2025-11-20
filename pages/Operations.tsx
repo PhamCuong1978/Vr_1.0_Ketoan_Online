@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Plus, Search, FileText, DollarSign, Calendar } from 'lucide-react';
-import { MOCK_TRANSACTIONS, MOCK_ACCOUNTS, MOCK_PARTNERS } from '../constants';
+import { Plus, Search } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
 import { TransactionType } from '../types';
 
 // A simplified mapping to show different UI based on URL param
@@ -17,20 +18,40 @@ const TYPE_MAP: Record<string, { title: string, type: TransactionType | 'ALL', c
 const Operations: React.FC = () => {
   const { module } = useParams<{ module: string }>();
   const currentConfig = TYPE_MAP[module || 'cash'] || TYPE_MAP['cash'];
+  const { transactions, addTransaction, partners, accounts } = useData();
 
   const [showForm, setShowForm] = useState(false);
 
-  // Mock form state
+  // Form state
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     documentNo: '',
     description: '',
     totalAmount: 0,
-    partner: ''
+    partnerId: ''
   });
 
-  // Filter transactions for the list
-  const filteredTransactions = MOCK_TRANSACTIONS; // Real app would filter by module/type
+  const handleSave = () => {
+      addTransaction({
+          date: formData.date,
+          type: currentConfig.type === 'ALL' ? TransactionType.SALES : currentConfig.type,
+          documentNo: formData.documentNo || `AUTO-${Math.floor(Math.random()*1000)}`,
+          description: formData.description,
+          totalAmount: Number(formData.totalAmount),
+          partnerId: formData.partnerId,
+          details: []
+      });
+      setShowForm(false);
+  };
+
+  // Filter transactions
+  const filteredTransactions = transactions.filter(t => {
+      if (currentConfig.type === 'ALL') return true;
+      // Very basic filtering mapping for demo
+      if (currentConfig.type === TransactionType.RECEIPT) return t.type === TransactionType.RECEIPT;
+      if (currentConfig.type === TransactionType.PAYMENT) return t.type === TransactionType.PAYMENT;
+      return true; 
+  });
 
   return (
     <div className="p-6 h-full flex flex-col">
@@ -81,7 +102,7 @@ const Operations: React.FC = () => {
                   <td className="px-6 py-4 font-medium text-blue-600">{t.documentNo}</td>
                   <td className="px-6 py-4">{t.description}</td>
                   <td className="px-6 py-4">
-                    {MOCK_PARTNERS.find(p => p.id === t.partnerId)?.name || '-'}
+                    {partners.find(p => p.id === t.partnerId)?.name || '-'}
                   </td>
                   <td className="px-6 py-4 text-right font-bold">
                     {t.totalAmount.toLocaleString('vi-VN')}
@@ -92,11 +113,11 @@ const Operations: React.FC = () => {
                 </tr>
               ))}
               {/* Empty State Placeholder */}
-              {filteredTransactions.length < 5 && Array.from({length: 5 - filteredTransactions.length}).map((_, i) => (
-                 <tr key={`empty-${i}`}>
-                    <td colSpan={6} className="px-6 py-4 text-transparent select-none">-</td>
+              {filteredTransactions.length === 0 && (
+                 <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400">Chưa có dữ liệu</td>
                  </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -127,7 +148,13 @@ const Operations: React.FC = () => {
                   </div>
                   <div>
                      <label className="block text-sm font-medium text-gray-700 mb-1">Số chứng từ</label>
-                     <input type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500" placeholder="Tự động sinh..." />
+                     <input 
+                        type="text" 
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500" 
+                        placeholder="Tự động sinh..." 
+                        value={formData.documentNo}
+                        onChange={e => setFormData({...formData, documentNo: e.target.value})}
+                    />
                   </div>
                   <div>
                      <label className="block text-sm font-medium text-gray-700 mb-1">Ngày hạch toán</label>
@@ -138,18 +165,37 @@ const Operations: React.FC = () => {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                      <label className="block text-sm font-medium text-gray-700 mb-1">Đối tượng</label>
-                     <select className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500">
+                     <select 
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
+                        value={formData.partnerId}
+                        onChange={e => setFormData({...formData, partnerId: e.target.value})}
+                    >
                         <option value="">-- Chọn đối tượng --</option>
-                        {MOCK_PARTNERS.map(p => <option key={p.id} value={p.id}>{p.code} - {p.name}</option>)}
+                        {partners.map(p => <option key={p.id} value={p.id}>{p.code} - {p.name}</option>)}
                      </select>
                   </div>
                   <div>
                      <label className="block text-sm font-medium text-gray-700 mb-1">Diễn giải</label>
-                     <input type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500" />
+                     <input 
+                        type="text" 
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500" 
+                        value={formData.description}
+                        onChange={e => setFormData({...formData, description: e.target.value})}
+                     />
                   </div>
                </div>
+               
+               <div>
+                   <label className="block text-sm font-medium text-gray-700 mb-1">Tổng tiền</label>
+                   <input 
+                        type="number" 
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500 font-bold" 
+                        value={formData.totalAmount}
+                        onChange={e => setFormData({...formData, totalAmount: Number(e.target.value)})}
+                     />
+               </div>
 
-               {/* Detail Grid */}
+               {/* Detail Grid - Simplified for demo */}
                <div>
                   <h3 className="text-sm font-bold text-gray-700 mb-2 border-b pb-1">Chi tiết hạch toán</h3>
                   <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -164,27 +210,24 @@ const Operations: React.FC = () => {
                         </thead>
                         <tbody>
                            <tr>
-                              <td className="p-2"><input type="text" className="w-full border-gray-300 border rounded px-2 py-1" /></td>
+                              <td className="p-2"><input type="text" className="w-full border-gray-300 border rounded px-2 py-1" placeholder="Chi tiết..." /></td>
                               <td className="p-2">
                                  <select className="w-full border-gray-300 border rounded px-2 py-1">
-                                     {MOCK_ACCOUNTS.map(a => <option key={a.code} value={a.code}>{a.code}</option>)}
+                                     {accounts.map(a => <option key={a.code} value={a.code}>{a.code}</option>)}
                                  </select>
                               </td>
-                              <td className="p-2"><input type="number" className="w-full border-gray-300 border rounded px-2 py-1 text-right" /></td>
+                              <td className="p-2"><input type="number" className="w-full border-gray-300 border rounded px-2 py-1 text-right" defaultValue={formData.totalAmount} /></td>
                               <td className="p-2 text-center"><button className="text-red-500 hover:text-red-700">&times;</button></td>
                            </tr>
                         </tbody>
                      </table>
-                     <div className="p-2 bg-gray-50">
-                        <button className="text-blue-600 text-xs font-medium hover:underline">+ Thêm dòng</button>
-                     </div>
                   </div>
                </div>
             </div>
 
             <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-xl">
                <button onClick={() => setShowForm(false)} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100">Hủy bỏ</button>
-               <button className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow-sm">Lưu & Ghi sổ</button>
+               <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow-sm">Lưu & Ghi sổ</button>
             </div>
           </div>
         </div>

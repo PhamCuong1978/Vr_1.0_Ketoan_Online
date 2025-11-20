@@ -1,3 +1,4 @@
+
 export enum TransactionType {
   RECEIPT = 'PT', // Thu
   PAYMENT = 'PC', // Chi
@@ -31,6 +32,7 @@ export interface Partner {
   name: string;
   taxCode?: string;
   address?: string;
+  phone?: string;
   type: 'CUSTOMER' | 'SUPPLIER' | 'EMPLOYEE' | 'OTHER';
 }
 
@@ -69,4 +71,41 @@ export interface MenuItem {
   icon: any;
   path: string;
   subItems?: MenuItem[];
+}
+
+// AI Chat Types
+export type MessageRole = 'user' | 'model' | 'system';
+
+export interface ChatMessage {
+  id: string;
+  role: MessageRole;
+  text: string;
+  timestamp: Date;
+  attachments?: { type: 'image' | 'audio'; url: string; data: string }[];
+  isError?: boolean;
+}
+
+export interface DataContextType {
+  companyInfo: CompanyInfo;
+  updateCompanyInfo: (info: Partial<CompanyInfo>) => void;
+  
+  transactions: Transaction[];
+  addTransaction: (transaction: Omit<Transaction, 'id'>) => string;
+  updateTransaction: (id: string, transaction: Partial<Transaction>) => void;
+  deleteTransaction: (id: string) => void;
+  
+  partners: Partner[];
+  addPartner: (partner: Omit<Partner, 'id'>) => string;
+  updatePartner: (id: string, partner: Partial<Partner>) => void;
+  deletePartner: (id: string) => void;
+
+  products: Product[];
+  addProduct: (product: Omit<Product, 'id'>) => string;
+  updateProduct: (id: string, product: Partial<Product>) => void;
+  deleteProduct: (id: string) => void;
+
+  accounts: Account[];
+  addAccount: (account: Account) => void;
+  updateAccount: (code: string, account: Partial<Account>) => void;
+  deleteAccount: (code: string) => void;
 }
