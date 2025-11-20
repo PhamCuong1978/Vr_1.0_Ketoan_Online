@@ -45,6 +45,18 @@ export interface Product {
   stock: number;
 }
 
+export interface LegalDocument {
+  id: string;
+  number: string; // Số hiệu văn bản (VD: 200/2014/TT-BTC)
+  name: string; // Tên văn bản (VD: Thông tư hướng dẫn chế độ kế toán...)
+  type: string; // Thông tư, Nghị định, Luật...
+  issueDate: string; // Ngày ban hành
+  effectiveDate: string; // Ngày hiệu lực
+  issuingAuthority: string; // Cơ quan ban hành
+  content: string; // Nội dung tóm tắt hoặc chi tiết (để AI đọc)
+  status: 'ACTIVE' | 'EXPIRED' | 'REPLACED';
+}
+
 export interface TransactionDetail {
   itemId?: string;
   description: string;
@@ -108,4 +120,9 @@ export interface DataContextType {
   addAccount: (account: Account) => void;
   updateAccount: (code: string, account: Partial<Account>) => void;
   deleteAccount: (code: string) => void;
+
+  legalDocuments: LegalDocument[];
+  addLegalDocument: (doc: Omit<LegalDocument, 'id'>) => string;
+  updateLegalDocument: (id: string, doc: Partial<LegalDocument>) => void;
+  deleteLegalDocument: (id: string) => void;
 }

@@ -12,10 +12,14 @@ QUY TRÌNH LÀM VIỆC (TUÂN THỦ TUYỆT ĐỐI):
 2.  **Phân tích & Kiểm tra**:
     *   Trước khi thực hiện bất kỳ hành động thay đổi dữ liệu nào (Thêm, Sửa, Xóa), BẮT BUỘC phải dùng công cụ \`get_database_data\` để kiểm tra dữ liệu hiện có.
     *   Ví dụ: Muốn xóa khách hàng A, phải tìm xem khách hàng A có ID là gì. Muốn thêm mã mới, kiểm tra xem mã đó đã trùng chưa.
-3.  **Đề xuất & Xin xác nhận**:
+3.  **Tuân thủ Pháp luật (QUAN TRỌNG)**:
+    *   Bạn có quyền truy cập vào Hệ thống Văn bản Pháp luật (thông qua tool \`get_legal_documents\`).
+    *   Khi người dùng hỏi về chế độ kế toán, định khoản nghiệp vụ phức tạp, hoặc các quy định thuế, BẮT BUỘC phải tham chiếu các văn bản pháp luật hiện hành có trong hệ thống để trả lời chính xác.
+    *   Nếu có nghiệp vụ nào vi phạm văn bản pháp luật (ví dụ: chi tiền mặt vượt định mức, chứng từ không hợp lệ theo quy định), hãy cảnh báo người dùng.
+4.  **Đề xuất & Xin xác nhận**:
     *   **QUAN TRỌNG**: Bạn KHÔNG ĐƯỢC PHÉP tự ý thay đổi dữ liệu khi chưa hỏi ý kiến.
     *   Hãy tóm tắt hành động: "Em tìm thấy khách hàng 'Công ty ABC' (Mã: KH001). Anh muốn xóa khách hàng này phải không ạ?" hoặc "Em sẽ tạo phiếu thu 50 triệu từ khách hàng ABC, anh đồng ý chứ?"
-4.  **Thực thi**:
+5.  **Thực thi**:
     *   Chỉ gọi các tool (\`create_transaction\`, \`manage_partner\`, \`delete_transaction\`, v.v.) KHI VÀ CHỈ KHI người dùng đã xác nhận rõ ràng (OK, Đồng ý, Duyệt, Làm đi...).
 
 CÁC CÔNG CỤ (TOOLS):
@@ -26,6 +30,7 @@ CÁC CÔNG CỤ (TOOLS):
 *   \`manage_account\`: Thêm/Sửa/Xóa Tài khoản kế toán.
 *   \`update_company_info\`: Cập nhật thông tin công ty.
 *   \`get_database_data\`: Đọc dữ liệu để tra cứu ID hoặc làm báo cáo.
+*   \`get_legal_documents\`: Tra cứu danh sách và nội dung các văn bản pháp luật trong hệ thống.
 
 Lưu ý giao tiếp:
 - Luôn xưng "Em", gọi "Anh Cường".
@@ -133,6 +138,14 @@ const tools: FunctionDeclaration[] = [
           },
           required: ["entity"]
       }
+  },
+  {
+    name: "get_legal_documents",
+    description: "Lấy danh sách và nội dung các văn bản pháp luật để tham chiếu quy định.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {}, // No params needed, returns all active docs
+    }
   }
 ];
 
@@ -218,6 +231,10 @@ export class AIController {
           if (args.entity === 'products') return JSON.stringify(this.dataContext.products);
           if (args.entity === 'accounts') return JSON.stringify(this.dataContext.accounts);
           return "Entity not found";
+        }
+
+        case "get_legal_documents": {
+           return JSON.stringify(this.dataContext.legalDocuments);
         }
 
         case "create_transaction": {

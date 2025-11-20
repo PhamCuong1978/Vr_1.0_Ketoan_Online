@@ -1,16 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Plus, Edit, Trash2, Search, X, Save, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, Save, AlertCircle, FileText, UploadCloud, Calendar, Building2 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
-import { Account, Partner, Product } from '../types';
+import { Account, Partner, Product, LegalDocument } from '../types';
 
 const Categories: React.FC = () => {
   const { type } = useParams<{ type: string }>();
   const { 
     accounts, addAccount, updateAccount, deleteAccount,
     partners, addPartner, updatePartner, deletePartner,
-    products, addProduct, updateProduct, deleteProduct
+    products, addProduct, updateProduct, deleteProduct,
+    legalDocuments, addLegalDocument, updateLegalDocument, deleteLegalDocument
   } = useData();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -47,6 +48,11 @@ const Categories: React.FC = () => {
       columns = ['Mã', 'Tên hàng', 'ĐVT', 'Đơn giá', 'Tồn kho'];
       data = products;
       break;
+    case 'legal-docs':
+      title = 'Văn bản Pháp luật';
+      columns = ['Số hiệu', 'Tên văn bản', 'Cơ quan BH', 'Ngày hiệu lực', 'Trạng thái'];
+      data = legalDocuments;
+      break;
     default:
       title = 'Danh mục chung';
       data = [];
@@ -58,6 +64,7 @@ const Categories: React.FC = () => {
      if (type === 'accounts') return item.code.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower);
      if (type === 'partners') return (item.code?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower));
      if (type === 'products') return (item.code?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower));
+     if (type === 'legal-docs') return (item.number?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower));
      return false;
   });
 
@@ -81,6 +88,7 @@ const Categories: React.FC = () => {
     if (type === 'accounts') setFormData({ code: '', name: '', category: 'ASSET' });
     else if (type === 'partners') setFormData({ code: '', name: '', type: 'CUSTOMER', taxCode: '', address: '', phone: '' });
     else if (type === 'products') setFormData({ code: '', name: '', unit: 'Cái', price: 0, stock: 0 });
+    else if (type === 'legal-docs') setFormData({ number: '', name: '', type: 'Thông tư', issueDate: '', effectiveDate: '', issuingAuthority: '', content: '', status: 'ACTIVE' });
     setIsModalOpen(true);
   };
 
@@ -93,15 +101,34 @@ const Categories: React.FC = () => {
   const handleDelete = (item: any) => {
     if (!window.confirm(`Bạn có chắc muốn xóa "${item.name}" không?`)) return;
 
-    if (type === 'accounts') deleteAccount(item.code);
-    else if (type === 'partners') deletePartner(item.id);
-    else if (type === 'products') deleteProduct(item.id);
+    switch (type) {
+      case 'accounts':
+        deleteAccount(item.code);
+        break;
+      case 'partners':
+        deletePartner(item.id);
+        break;
+      case 'products':
+        deleteProduct(item.id);
+        break;
+      case 'legal-docs':
+        if (typeof deleteLegalDocument === 'function') {
+            deleteLegalDocument(item.id);
+        } else {
+            console.error("Function deleteLegalDocument is missing");
+        }
+        break;
+    }
   };
 
   const handleSave = () => {
     // Validation simple
     if (!formData.name) return alert("Vui lòng nhập tên!");
     if (type === 'accounts' && !formData.code) return alert("Vui lòng nhập số tài khoản!");
+    if (type === 'legal-docs') {
+        if (!formData.number) return alert("Vui lòng nhập số hiệu văn bản!");
+        if (!formData.issuingAuthority) return alert("Vui lòng nhập cơ quan ban hành!");
+    }
 
     if (type === 'accounts') {
       if (editingItem) updateAccount(editingItem.code, formData);
@@ -116,9 +143,27 @@ const Categories: React.FC = () => {
     } else if (type === 'products') {
       if (editingItem) updateProduct(editingItem.id, formData);
       else addProduct(formData);
+    } else if (type === 'legal-docs') {
+      if (editingItem) updateLegalDocument(editingItem.id, formData);
+      else addLegalDocument(formData);
     }
 
     setIsModalOpen(false);
+  };
+
+  // Mock File Upload
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+          // In a real app, we would upload to server or parse PDF content here.
+          // For demo, we simulate filling the content with a placeholder so AI knows about it.
+          setFormData({
+              ...formData,
+              name: formData.name || file.name,
+              content: `[Nội dung file ${file.name} được tải lên]. Đây là văn bản quy phạm pháp luật.`
+          });
+          alert("Đã tải lên văn bản thành công. Hệ thống đã ghi nhận nội dung.");
+      }
   };
 
   return (
@@ -197,9 +242,12 @@ const Categories: React.FC = () => {
                       sttCounter++;
                       sttDisplay = sttCounter.toString().padStart(2, '0');
                   }
+                  
+                  // Use stable key if possible
+                  const rowKey = item.id || item.code || idx;
 
                   return (
-                    <React.Fragment key={idx}>
+                    <React.Fragment key={rowKey}>
                         {groupHeader}
                         <tr className={`hover:bg-blue-50 transition-colors group ${type === 'accounts' ? '' : 'border-b border-gray-200'}`}>
                             {type === 'accounts' && (
@@ -245,6 +293,23 @@ const Categories: React.FC = () => {
                             </>
                             )}
 
+                            {type === 'legal-docs' && (
+                            <>
+                                <td className="px-6 py-3 font-medium text-blue-600 border border-gray-200 flex items-center gap-2">
+                                   <FileText size={16} className="text-gray-400"/>
+                                   {item.number}
+                                </td>
+                                <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.name}</td>
+                                <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.issuingAuthority}</td>
+                                <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.effectiveDate || item.issueDate}</td>
+                                <td className="px-6 py-3 border border-gray-200">
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${item.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                        {item.status === 'ACTIVE' ? 'Hiệu lực' : 'Hết hiệu lực'}
+                                    </span>
+                                </td>
+                            </>
+                            )}
+
                             <td className={`px-4 py-2 text-right ${type === 'accounts' ? 'border border-gray-300' : 'border border-gray-200'}`}>
                             <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                 <button onClick={() => handleEdit(item)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md transition-colors" title="Sửa">
@@ -284,7 +349,9 @@ const Categories: React.FC = () => {
             <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
               <h2 className="text-lg font-bold text-gray-800">
                 {editingItem ? 'Cập nhật' : 'Thêm mới'} {
-                  type === 'accounts' ? 'Tài khoản' : type === 'partners' ? 'Đối tác' : 'Sản phẩm'
+                  type === 'accounts' ? 'Tài khoản' : 
+                  type === 'partners' ? 'Đối tác' : 
+                  type === 'products' ? 'Sản phẩm' : 'Văn bản'
                 }
               </h2>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200 transition-colors">
@@ -440,6 +507,118 @@ const Categories: React.FC = () => {
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                         />
                       </div>
+                   </div>
+                </>
+              )}
+
+              {type === 'legal-docs' && (
+                <>
+                   <div className="grid grid-cols-3 gap-4">
+                      <div className="col-span-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Số hiệu <span className="text-red-500">*</span></label>
+                        <input 
+                          value={formData.number || ''}
+                          onChange={e => setFormData({...formData, number: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                          placeholder="VD: 200/2014/TT-BTC"
+                        />
+                      </div>
+                      <div className="col-span-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Loại văn bản</label>
+                         <select 
+                          value={formData.type || 'Thông tư'}
+                          onChange={e => setFormData({...formData, type: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                        >
+                          <option value="Thông tư">Thông tư</option>
+                          <option value="Nghị định">Nghị định</option>
+                          <option value="Luật">Luật</option>
+                          <option value="Quyết định">Quyết định</option>
+                          <option value="Công văn">Công văn</option>
+                        </select>
+                      </div>
+                      <div className="col-span-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Cơ quan BH <span className="text-red-500">*</span></label>
+                        <div className="relative">
+                            <input 
+                                value={formData.issuingAuthority || ''}
+                                onChange={e => setFormData({...formData, issuingAuthority: e.target.value})}
+                                className="w-full border border-gray-300 rounded-lg pl-8 pr-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                                placeholder="VD: Bộ Tài chính"
+                            />
+                            <Building2 size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                        </div>
+                      </div>
+                   </div>
+                   <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Tên/Trích yếu văn bản <span className="text-red-500">*</span></label>
+                      <textarea
+                        value={formData.name || ''}
+                        onChange={e => setFormData({...formData, name: e.target.value})}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                        rows={2}
+                        placeholder="Nhập tên hoặc trích yếu nội dung văn bản..."
+                      />
+                   </div>
+                   <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Ngày ban hành</label>
+                        <div className="relative">
+                            <input 
+                            type="date"
+                            value={formData.issueDate || ''}
+                            onChange={e => setFormData({...formData, issueDate: e.target.value})}
+                            className="w-full border border-gray-300 rounded-lg pl-8 pr-2 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            />
+                            <Calendar size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Ngày hiệu lực</label>
+                        <div className="relative">
+                            <input 
+                            type="date"
+                            value={formData.effectiveDate || ''}
+                            onChange={e => setFormData({...formData, effectiveDate: e.target.value})}
+                            className="w-full border border-gray-300 rounded-lg pl-8 pr-2 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            />
+                             <Calendar size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+                        <select 
+                          value={formData.status || 'ACTIVE'}
+                          onChange={e => setFormData({...formData, status: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                        >
+                          <option value="ACTIVE">Còn hiệu lực</option>
+                          <option value="EXPIRED">Hết hiệu lực</option>
+                          <option value="REPLACED">Đã bị thay thế</option>
+                        </select>
+                      </div>
+                   </div>
+                   
+                   <div className="border-t pt-4 mt-2">
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Nội dung văn bản (Upload để AI học)</label>
+                        
+                        <div className="flex items-center gap-3 mb-3">
+                            <label className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg cursor-pointer transition-colors border border-gray-300">
+                                <UploadCloud size={18} />
+                                <span>Tải lên file (PDF, Doc)</span>
+                                <input type="file" className="hidden" onChange={handleFileUpload} accept=".pdf,.doc,.docx,.txt"/>
+                            </label>
+                            <span className="text-xs text-gray-500 italic">Hệ thống sẽ tự động đọc nội dung file.</span>
+                        </div>
+
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Hoặc nhập nội dung chi tiết/tóm tắt:</label>
+                        <textarea
+                            value={formData.content || ''}
+                            onChange={e => setFormData({...formData, content: e.target.value})}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-gray-50"
+                            rows={5}
+                            placeholder="Dán nội dung văn bản vào đây để Trợ lý AI có thể tham chiếu..."
+                        />
                    </div>
                 </>
               )}

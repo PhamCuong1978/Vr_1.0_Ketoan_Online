@@ -1,12 +1,12 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { 
-  CompanyInfo, Transaction, Partner, Product, Account, 
+  CompanyInfo, Transaction, Partner, Product, Account, LegalDocument,
   DataContextType, TransactionType 
 } from '../types';
 import { 
   INITIAL_COMPANY_INFO, MOCK_TRANSACTIONS, MOCK_PARTNERS, 
-  MOCK_PRODUCTS, MOCK_ACCOUNTS 
+  MOCK_PRODUCTS, MOCK_ACCOUNTS, MOCK_LEGAL_DOCUMENTS
 } from '../constants';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -29,6 +29,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [partners, setPartners] = useState<Partner[]>(MOCK_PARTNERS);
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
   const [accounts, setAccounts] = useState<Account[]>(MOCK_ACCOUNTS);
+  const [legalDocuments, setLegalDocuments] = useState<LegalDocument[]>(MOCK_LEGAL_DOCUMENTS);
 
   const updateCompanyInfo = (info: Partial<CompanyInfo>) => {
     setCompanyInfo(prev => ({ ...prev, ...info }));
@@ -95,6 +96,22 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     setAccounts(prev => prev.filter(a => a.code !== code));
   };
 
+  // --- Legal Documents ---
+  const addLegalDocument = (data: Omit<LegalDocument, 'id'>) => {
+    const newId = Math.random().toString(36).substr(2, 9);
+    const newDoc: LegalDocument = { ...data, id: newId };
+    setLegalDocuments(prev => [...prev, newDoc]);
+    return newId;
+  };
+
+  const updateLegalDocument = (id: string, data: Partial<LegalDocument>) => {
+    setLegalDocuments(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
+  };
+
+  const deleteLegalDocument = (id: string) => {
+    setLegalDocuments(prev => prev.filter(d => d.id !== id));
+  };
+
   const value = {
     companyInfo,
     updateCompanyInfo,
@@ -117,7 +134,12 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     accounts,
     addAccount,
     updateAccount,
-    deleteAccount
+    deleteAccount,
+
+    legalDocuments,
+    addLegalDocument,
+    updateLegalDocument,
+    deleteLegalDocument
   };
 
   return (

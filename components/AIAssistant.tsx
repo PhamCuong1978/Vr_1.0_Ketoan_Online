@@ -140,9 +140,10 @@ const AIAssistant: React.FC = () => {
         
         setIsProcessing(true);
         try {
-            // Send image to AI with correct mimeType, ensure ref is not null
-            if (aiControllerRef.current) {
-                const responseText = await aiControllerRef.current.sendMessage("Hãy phân tích hình ảnh này và trích xuất thông tin quan trọng.", base64String, mimeType);
+            // Ensure ref is not null inside the callback
+            const controller = aiControllerRef.current;
+            if (controller) {
+                const responseText = await controller.sendMessage("Hãy phân tích hình ảnh này và trích xuất thông tin quan trọng.", base64String, mimeType);
                 setMessages(prev => [...prev, {
                     id: (Date.now() + 1).toString(),
                     role: 'model',

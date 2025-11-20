@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -15,6 +16,7 @@ import {
   Package,
   Landmark,
   BookOpen,
+  Book,
   X
 } from 'lucide-react';
 
@@ -81,6 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
         { id: 'cat-account', label: 'Hệ thống TK', icon: Database, path: '/categories/accounts' },
         { id: 'cat-partner', label: 'Khách hàng/NCC', icon: Users, path: '/categories/partners' },
         { id: 'cat-product', label: 'Vật tư hàng hóa', icon: Package, path: '/categories/products' },
+        { id: 'cat-legal', label: 'Văn bản pháp luật', icon: Book, path: '/categories/legal-docs' },
         { id: 'cat-other', label: 'Danh mục khác', icon: Database, path: '/categories/others' },
       ]
     },
