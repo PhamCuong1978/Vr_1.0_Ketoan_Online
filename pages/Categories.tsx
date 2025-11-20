@@ -151,18 +151,30 @@ const Categories: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  // Mock File Upload
+  // Enhanced File Upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-          // In a real app, we would upload to server or parse PDF content here.
-          // For demo, we simulate filling the content with a placeholder so AI knows about it.
-          setFormData({
-              ...formData,
-              name: formData.name || file.name,
-              content: `[Nội dung file ${file.name} được tải lên]. Đây là văn bản quy phạm pháp luật.`
-          });
-          alert("Đã tải lên văn bản thành công. Hệ thống đã ghi nhận nội dung.");
+          if (file.type === "text/plain") {
+             const reader = new FileReader();
+             reader.onload = (event) => {
+                 setFormData((prev: any) => ({
+                     ...prev,
+                     name: prev.name || file.name,
+                     content: event.target?.result as string
+                 }));
+             };
+             reader.readAsText(file);
+          } else {
+             // For binary files (PDF, Doc), we can't read content easily without libraries.
+             // We keep the placeholder but advise user.
+             setFormData((prev: any) => ({
+                 ...prev,
+                 name: prev.name || file.name,
+                 content: prev.content || `[File đính kèm: ${file.name}]\n\n(Lưu ý: Hệ thống chưa hỗ trợ đọc trực tiếp file PDF/Word. Để Trợ lý AI học chi tiết, anh/chị vui lòng Copy toàn bộ nội dung văn bản và DÁN đè vào ô này)`
+             }));
+             alert("Đã đính kèm file. Lưu ý: Với file PDF/Word, vui lòng copy nội dung văn bản dán vào ô Nội dung để Trợ lý AI có thể học được chi tiết nhé!");
+          }
       }
   };
 
@@ -600,24 +612,26 @@ const Categories: React.FC = () => {
                    </div>
                    
                    <div className="border-t pt-4 mt-2">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Nội dung văn bản (Upload để AI học)</label>
+                        <label className="block text-sm font-bold text-gray-800 mb-2">Nội dung văn bản (QUAN TRỌNG)</label>
+                        <p className="text-xs text-gray-500 mb-3">
+                            Để AI có thể "học" và trả lời chính xác các câu hỏi nghiệp vụ, vui lòng nhập đầy đủ nội dung văn bản vào ô dưới đây.
+                        </p>
                         
                         <div className="flex items-center gap-3 mb-3">
-                            <label className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg cursor-pointer transition-colors border border-gray-300">
+                            <label className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg cursor-pointer transition-colors border border-blue-200">
                                 <UploadCloud size={18} />
-                                <span>Tải lên file (PDF, Doc)</span>
+                                <span>Tải lên file (Text, PDF, Doc)</span>
                                 <input type="file" className="hidden" onChange={handleFileUpload} accept=".pdf,.doc,.docx,.txt"/>
                             </label>
-                            <span className="text-xs text-gray-500 italic">Hệ thống sẽ tự động đọc nội dung file.</span>
+                            <span className="text-xs text-gray-500 italic">Hỗ trợ tự động đọc file .txt</span>
                         </div>
 
-                        <label className="block text-xs font-medium text-gray-500 mb-1">Hoặc nhập nội dung chi tiết/tóm tắt:</label>
                         <textarea
                             value={formData.content || ''}
                             onChange={e => setFormData({...formData, content: e.target.value})}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-gray-50"
-                            rows={5}
-                            placeholder="Dán nội dung văn bản vào đây để Trợ lý AI có thể tham chiếu..."
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-gray-50 font-mono"
+                            rows={10}
+                            placeholder="Dán nội dung chi tiết của văn bản vào đây. Ví dụ: Điều 1. Phạm vi điều chỉnh..."
                         />
                    </div>
                 </>
@@ -627,7 +641,7 @@ const Categories: React.FC = () => {
             <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
               <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors">Hủy bỏ</button>
               <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow-sm flex items-center gap-2 transition-colors">
-                <Save size={18} /> Lưu dữ liệu
+                <Save size={18} /> Lưu & Dạy AI
               </button>
             </div>
           </div>

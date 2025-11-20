@@ -96,21 +96,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
 
   return (
     <>
-      {/* Mobile Overlay */}
+      {/* Overlay - Visible on all screens when open to support click-outside-to-close */}
       <div
-        className={`fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 bg-black bg-opacity-50 z-20 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={toggleSidebar}
       ></div>
 
       {/* Sidebar Container 
-          - Mobile: Fixed position, controls visibility via translate-x
-          - Desktop: Static/Relative position, controls visibility via width
+          - Mobile: Fixed position
+          - Desktop: Relative position to allow pushing content, but z-indexed above overlay
       */}
       <div
         className={`
           fixed inset-y-0 left-0 z-30 bg-slate-900 text-slate-100 
           transition-all duration-300 ease-in-out flex flex-col
-          lg:static 
+          lg:relative
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           ${isOpen ? 'lg:w-64' : 'lg:w-0 lg:overflow-hidden lg:translate-x-0'}
         `}
@@ -123,8 +123,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                 <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold">K</div>
                 <span className="text-lg font-semibold">Ketoan_Online</span>
               </div>
-              {/* Close button only visible on Mobile */}
-              <button onClick={toggleSidebar} className="lg:hidden text-slate-400 hover:text-white">
+              {/* Close button visible on all screens now that it behaves like a drawer/modal */}
+              <button onClick={toggleSidebar} className="text-slate-400 hover:text-white">
                 <X size={20} />
               </button>
             </div>

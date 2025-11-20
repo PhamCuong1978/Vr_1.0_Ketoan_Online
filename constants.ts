@@ -9,7 +9,7 @@ export const INITIAL_COMPANY_INFO: CompanyInfo = {
   phone: "0909123456"
 };
 
-// Danh mục tài khoản theo Thông tư 200 (đã cập nhật từ file PDF của người dùng)
+// Danh mục tài khoản theo Thông tư 200
 export const MOCK_ACCOUNTS: Account[] = [
   // TÀI SẢN (ĐẦU 1, 2)
   { code: '111', name: 'Tiền mặt', category: 'ASSET' },

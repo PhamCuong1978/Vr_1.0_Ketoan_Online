@@ -5,37 +5,34 @@ import { DataContextType, TransactionType } from "../types";
 // System Instruction defining the persona and behavior
 const SYSTEM_INSTRUCTION = `
 Bạn là Trợ lý Kế toán Ảo chuyên nghiệp của Anh Cường.
-Nhiệm vụ: Hỗ trợ quản lý tài chính, nhập liệu, phân tích số liệu và quản lý danh mục (Khách hàng, Hàng hóa, Tài khoản).
+Nhiệm vụ: Hỗ trợ quản lý tài chính, nhập liệu, phân tích số liệu và quản lý danh mục.
+
+QUYỀN TRUY CẬP DỮ LIỆU & HỌC TẬP:
+*   Bạn có quyền truy cập TOÀN BỘ dữ liệu trong hệ thống thông qua công cụ \`get_database_data\`, bao gồm:
+    1.  **Giao dịch (transactions)**: Lịch sử thu chi, mua bán.
+    2.  **Đối tác (partners)**: Khách hàng, Nhà cung cấp, Nhân viên.
+    3.  **Hàng hóa (products)**: Danh sách vật tư, tồn kho, giá cả.
+    4.  **Tài khoản (accounts)**: Hệ thống tài khoản kế toán.
+    5.  **Văn bản pháp luật (legal_documents)**: Các thông tư, nghị định đã được lưu để tham chiếu.
+    6.  **Thông tin công ty (company_info)**: Tên, địa chỉ, MST, giám đốc.
+*   Khi người dùng hỏi về bất kỳ thông tin nào (ví dụ: "Quy định về hóa đơn hiện tại thế nào?", "Tình hình kinh doanh tháng này ra sao?"), hãy CHỦ ĐỘNG gọi tool \`get_database_data\` để lấy dữ liệu mới nhất, đọc hiểu và trả lời.
 
 QUY TRÌNH LÀM VIỆC (TUÂN THỦ TUYỆT ĐỐI):
-1.  **Tiếp nhận yêu cầu**: Lắng nghe yêu cầu từ người dùng.
-2.  **Phân tích & Kiểm tra**:
-    *   Trước khi thực hiện bất kỳ hành động thay đổi dữ liệu nào (Thêm, Sửa, Xóa), BẮT BUỘC phải dùng công cụ \`get_database_data\` để kiểm tra dữ liệu hiện có.
-    *   Ví dụ: Muốn xóa khách hàng A, phải tìm xem khách hàng A có ID là gì. Muốn thêm mã mới, kiểm tra xem mã đó đã trùng chưa.
-3.  **Tuân thủ Pháp luật (QUAN TRỌNG)**:
-    *   Bạn có quyền truy cập vào Hệ thống Văn bản Pháp luật (thông qua tool \`get_legal_documents\`).
-    *   Khi người dùng hỏi về chế độ kế toán, định khoản nghiệp vụ phức tạp, hoặc các quy định thuế, BẮT BUỘC phải tham chiếu các văn bản pháp luật hiện hành có trong hệ thống để trả lời chính xác.
-    *   Nếu có nghiệp vụ nào vi phạm văn bản pháp luật (ví dụ: chi tiền mặt vượt định mức, chứng từ không hợp lệ theo quy định), hãy cảnh báo người dùng.
-4.  **Đề xuất & Xin xác nhận**:
-    *   **QUAN TRỌNG**: Bạn KHÔNG ĐƯỢC PHÉP tự ý thay đổi dữ liệu khi chưa hỏi ý kiến.
-    *   Hãy tóm tắt hành động: "Em tìm thấy khách hàng 'Công ty ABC' (Mã: KH001). Anh muốn xóa khách hàng này phải không ạ?" hoặc "Em sẽ tạo phiếu thu 50 triệu từ khách hàng ABC, anh đồng ý chứ?"
-5.  **Thực thi**:
-    *   Chỉ gọi các tool (\`create_transaction\`, \`manage_partner\`, \`delete_transaction\`, v.v.) KHI VÀ CHỈ KHI người dùng đã xác nhận rõ ràng (OK, Đồng ý, Duyệt, Làm đi...).
+1.  **Tiếp nhận & Kiểm tra**:
+    *   Luôn kiểm tra dữ liệu hiện có trước khi thực hiện hành động (Thêm/Sửa/Xóa).
+    *   Ví dụ: Muốn xóa khách hàng, phải tìm ID của họ trước.
+2.  **Tuân thủ Pháp luật**:
+    *   Khi tư vấn nghiệp vụ, hãy lấy dữ liệu \`legal_documents\` để đối chiếu.
+3.  **Thực thi**:
+    *   Chỉ gọi các tool thay đổi dữ liệu (\`create_transaction\`, \`manage_partner\`...) khi người dùng đã xác nhận.
 
 CÁC CÔNG CỤ (TOOLS):
-*   \`create_transaction\`: Tạo phiếu thu, chi, nhập, xuất, bán hàng...
-*   \`delete_transaction\`: Xóa chứng từ theo ID.
-*   \`manage_partner\`: Thêm/Sửa/Xóa Khách hàng, Nhà cung cấp, Nhân viên.
-*   \`manage_product\`: Thêm/Sửa/Xóa Vật tư hàng hóa.
-*   \`manage_account\`: Thêm/Sửa/Xóa Tài khoản kế toán.
-*   \`update_company_info\`: Cập nhật thông tin công ty.
-*   \`get_database_data\`: Đọc dữ liệu để tra cứu ID hoặc làm báo cáo.
-*   \`get_legal_documents\`: Tra cứu danh sách và nội dung các văn bản pháp luật trong hệ thống.
+*   \`get_database_data\`: Cổng truy xuất dữ liệu vạn năng.
+*   \`create_transaction\`, \`delete_transaction\`, \`manage_partner\`, \`manage_product\`, \`manage_account\`, \`update_company_info\`: Các công cụ tác nghiệp.
 
 Lưu ý giao tiếp:
 - Luôn xưng "Em", gọi "Anh Cường".
-- Ngắn gọn, súc tích, chuyên nghiệp.
-- Nếu người dùng gửi ảnh hóa đơn, hãy phân tích ảnh trước, trích xuất thông tin rồi mới hỏi xác nhận tạo phiếu.
+- Trả lời dựa trên dữ liệu thực tế (Fact-based).
 `;
 
 // Tool Definitions
@@ -130,22 +127,17 @@ const tools: FunctionDeclaration[] = [
   },
   {
       name: "get_database_data",
-      description: "Lấy toàn bộ dữ liệu từ một bảng cụ thể để tra cứu ID hoặc tổng hợp báo cáo.",
+      description: "Lấy dữ liệu từ hệ thống để học hỏi, tra cứu hoặc báo cáo. Truy cập được TẤT CẢ các bảng.",
       parameters: {
           type: Type.OBJECT,
           properties: {
-            entity: { type: Type.STRING, description: "'transactions', 'partners', 'products', 'accounts'" }
+            entity: { 
+              type: Type.STRING, 
+              description: "Loại dữ liệu cần lấy: 'transactions', 'partners', 'products', 'accounts', 'legal_documents', 'company_info'" 
+            }
           },
           required: ["entity"]
       }
-  },
-  {
-    name: "get_legal_documents",
-    description: "Lấy danh sách và nội dung các văn bản pháp luật để tham chiếu quy định.",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {}, // No params needed, returns all active docs
-    }
   }
 ];
 
@@ -186,11 +178,11 @@ export class AIController {
          parts.push({ inlineData: { mimeType: imageMimeType || 'image/jpeg', data: imageBase64 } });
       }
       
-      // Add text part. If empty (just sending image), provide a space to avoid "ContentUnion" error if strict
+      // Add text part. Important: Do not add role here.
       parts.push({ text: message || " " });
 
       let response = await this.chatSession.sendMessage({
-        message: { role: 'user', parts: parts }
+        message: parts
       });
 
       // Handle Function Calls Loop
@@ -198,6 +190,7 @@ export class AIController {
         const functionResponses = await Promise.all(
           response.functionCalls.map(async (call: any) => {
             const result = await this.executeFunction(call);
+            // Gemini 2.5 requires 'id' to map response to call
             return {
               id: call.id,
               name: call.name,
@@ -207,15 +200,19 @@ export class AIController {
         );
         
         // Send tool results back to model
+        const responseParts = functionResponses.map(resp => ({
+            functionResponse: resp
+        }));
+
         response = await this.chatSession.sendMessage({
-          message: [{ functionResponse: { functionResponses } }]
+          message: responseParts
         });
       }
 
       return response.text;
     } catch (error) {
       console.error("AI Processing Error:", error);
-      return "Xin lỗi, em đang gặp chút sự cố kết nối hoặc xử lý dữ liệu. Anh thử lại giúp em nhé!";
+      return `Xin lỗi, em gặp lỗi kỹ thuật: ${JSON.stringify(error)}. Anh thử lại giúp em nhé!`;
     }
   }
 
@@ -230,11 +227,9 @@ export class AIController {
           if (args.entity === 'partners') return JSON.stringify(this.dataContext.partners);
           if (args.entity === 'products') return JSON.stringify(this.dataContext.products);
           if (args.entity === 'accounts') return JSON.stringify(this.dataContext.accounts);
-          return "Entity not found";
-        }
-
-        case "get_legal_documents": {
-           return JSON.stringify(this.dataContext.legalDocuments);
+          if (args.entity === 'legal_documents') return JSON.stringify(this.dataContext.legalDocuments);
+          if (args.entity === 'company_info') return JSON.stringify(this.dataContext.companyInfo);
+          return "Entity not found or not supported";
         }
 
         case "create_transaction": {
