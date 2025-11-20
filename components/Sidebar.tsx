@@ -14,7 +14,8 @@ import {
   Users,
   Package,
   Landmark,
-  BookOpen
+  BookOpen,
+  X
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -97,76 +98,89 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
         onClick={toggleSidebar}
       ></div>
 
+      {/* Sidebar Container 
+          - Mobile: Fixed position, controls visibility via translate-x
+          - Desktop: Static/Relative position, controls visibility via width
+      */}
       <div
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-slate-100 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`
+          fixed inset-y-0 left-0 z-30 bg-slate-900 text-slate-100 
+          transition-all duration-300 ease-in-out flex flex-col
+          lg:static 
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${isOpen ? 'lg:w-64' : 'lg:w-0 lg:overflow-hidden lg:translate-x-0'}
+        `}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between h-16 px-4 bg-slate-800 border-b border-slate-700">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold">K</div>
-            <span className="text-lg font-semibold">Ketoan_Online</span>
-          </div>
-          <button onClick={toggleSidebar} className="lg:hidden text-slate-400 hover:text-white">
-            <Menu size={20} />
-          </button>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4">
-          <ul className="space-y-1 px-2">
-            {menuGroups.map((item) => (
-              <li key={item.id}>
-                {item.subItems ? (
-                  <div>
-                    <button
-                      onClick={() => toggleMenu(item.id)}
-                      className={`w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${expandedMenus.includes(item.id) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
-                    >
-                      <div className="flex items-center">
-                        <item.icon size={18} className="mr-3" />
-                        {item.label}
-                      </div>
-                      {expandedMenus.includes(item.id) ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                    </button>
-                    {expandedMenus.includes(item.id) && (
-                      <ul className="mt-1 ml-4 space-y-1 border-l border-slate-700 pl-2">
-                        {item.subItems.map((sub) => (
-                          <li key={sub.id}>
-                            <Link
-                              to={sub.path}
-                              className={`flex items-center px-4 py-2 text-sm rounded-md transition-colors ${isActive(sub.path) ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
-                            >
-                              {/* <sub.icon size={16} className="mr-2 opacity-70" /> */}
-                              {sub.label}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ) : (
-                  <Link
-                    to={item.path}
-                    className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${isActive(item.path) ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
-                  >
-                    <item.icon size={18} className="mr-3" />
-                    {item.label}
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        {/* Footer User Profile */}
-        <div className="p-4 border-t border-slate-700 bg-slate-800">
-          <div className="flex items-center">
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold">AD</div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-white">Admin</p>
-              <p className="text-xs text-slate-400">Kế toán trưởng</p>
+        {/* Inner Wrapper - fixed width to prevent content squishing when parent width animates */}
+        <div className="w-64 h-full flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between h-16 px-4 bg-slate-800 border-b border-slate-700 shrink-0">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold">K</div>
+                <span className="text-lg font-semibold">Ketoan_Online</span>
+              </div>
+              {/* Close button only visible on Mobile */}
+              <button onClick={toggleSidebar} className="lg:hidden text-slate-400 hover:text-white">
+                <X size={20} />
+              </button>
             </div>
-          </div>
+
+            {/* Navigation */}
+            <nav className="flex-1 overflow-y-auto py-4 overflow-x-hidden">
+              <ul className="space-y-1 px-2">
+                {menuGroups.map((item) => (
+                  <li key={item.id}>
+                    {item.subItems ? (
+                      <div>
+                        <button
+                          onClick={() => toggleMenu(item.id)}
+                          className={`w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${expandedMenus.includes(item.id) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                        >
+                          <div className="flex items-center whitespace-nowrap">
+                            <item.icon size={18} className="mr-3 min-w-[18px]" />
+                            {item.label}
+                          </div>
+                          {expandedMenus.includes(item.id) ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                        </button>
+                        {expandedMenus.includes(item.id) && (
+                          <ul className="mt-1 ml-4 space-y-1 border-l border-slate-700 pl-2">
+                            {item.subItems.map((sub) => (
+                              <li key={sub.id}>
+                                <Link
+                                  to={sub.path}
+                                  className={`flex items-center px-4 py-2 text-sm rounded-md transition-colors whitespace-nowrap ${isActive(sub.path) ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
+                                >
+                                  {sub.label}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ) : (
+                      <Link
+                        to={item.path}
+                        className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${isActive(item.path) ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                      >
+                        <item.icon size={18} className="mr-3 min-w-[18px]" />
+                        {item.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            {/* Footer User Profile */}
+            <div className="p-4 border-t border-slate-700 bg-slate-800 shrink-0">
+              <div className="flex items-center">
+                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold">AD</div>
+                <div className="ml-3 whitespace-nowrap">
+                  <p className="text-sm font-medium text-white">Admin</p>
+                  <p className="text-xs text-slate-400">Kế toán trưởng</p>
+                </div>
+              </div>
+            </div>
         </div>
       </div>
     </>
