@@ -39,7 +39,7 @@ const App: React.FC = () => {
                 </button>
                 {/* Placeholder for breadcrumbs or page title if needed later */}
                 <div className="ml-4 font-medium text-gray-500 hidden sm:block">
-                  Hệ thống Kế toán Online
+                  Hệ thống Kế toán Online - Version 1.0
                 </div>
               </div>
               <div className="flex items-center gap-3">
