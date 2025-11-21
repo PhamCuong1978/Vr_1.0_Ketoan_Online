@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Plus, Edit, Trash2, Search, X, Save, AlertCircle, FileText, UploadCloud, Calendar, Building2, Loader2, CheckCircle, Paperclip, ExternalLink } from 'lucide-react';
@@ -15,6 +14,7 @@ const Categories: React.FC = () => {
     products, addProduct, updateProduct, deleteProduct,
     bankAccounts, addBankAccount, updateBankAccount, deleteBankAccount,
     projects, addProject, updateProject, deleteProject,
+    jobs, addJob, updateJob, deleteJob,
     legalDocuments, addLegalDocument, updateLegalDocument, deleteLegalDocument,
     currencies, addCurrency, updateCurrency, deleteCurrency,
     units, addUnit, updateUnit, deleteUnit,
@@ -52,22 +52,22 @@ const Categories: React.FC = () => {
       break;
     case 'banks':
       title = 'Tài khoản Ngân hàng';
-      columns = ['Số tài khoản', 'Ngân hàng', 'Chi nhánh', 'Loại tiền', 'Chủ tài khoản'];
+      columns = ['Số tài khoản', 'Ngân hàng', 'Chi nhánh', 'Loại tiền', 'Người liên hệ', 'Điện thoại', 'Địa chỉ'];
       data = bankAccounts;
       break;
     case 'customers':
       title = 'Danh sách Khách hàng';
-      columns = ['Mã KH', 'Tên khách hàng', 'Mã số thuế', 'Địa chỉ'];
+      columns = ['Mã KH', 'Tên khách hàng', 'Mã số thuế', 'Người liên hệ', 'Điện thoại', 'Địa chỉ'];
       data = partners.filter(p => p.type === 'CUSTOMER');
       break;
     case 'suppliers':
       title = 'Danh sách Nhà cung cấp';
-      columns = ['Mã NCC', 'Tên nhà cung cấp', 'Mã số thuế', 'Địa chỉ'];
+      columns = ['Mã NCC', 'Tên nhà cung cấp', 'Mã số thuế', 'Người liên hệ', 'Điện thoại', 'Địa chỉ'];
       data = partners.filter(p => p.type === 'SUPPLIER');
       break;
     case 'employees':
       title = 'Danh sách Nhân viên';
-      columns = ['Mã NV', 'Tên nhân viên', 'Điện thoại', 'Địa chỉ'];
+      columns = ['Mã NV', 'Tên nhân viên', 'Điện thoại', 'Người liên hệ', 'Địa chỉ'];
       data = partners.filter(p => p.type === 'EMPLOYEE');
       break;
     case 'products':
@@ -79,6 +79,11 @@ const Categories: React.FC = () => {
       title = 'Danh mục Công trình';
       columns = ['Mã CT', 'Tên công trình', 'Giá trị', 'Trạng thái'];
       data = projects;
+      break;
+    case 'jobs':
+      title = 'Danh mục Vụ việc';
+      columns = ['Mã Vụ việc', 'Tên Vụ việc', 'Trạng thái'];
+      data = jobs;
       break;
     case 'legal-docs':
       title = 'Văn bản Pháp luật';
@@ -120,9 +125,9 @@ const Categories: React.FC = () => {
   const filteredData = data.filter((item: any) => {
      const searchLower = searchTerm.toLowerCase();
      if (type === 'accounts') return item.code.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower);
-     if (type === 'banks') return item.accountNumber?.toLowerCase().includes(searchLower) || item.bankName?.toLowerCase().includes(searchLower);
-     if (type === 'projects') return item.code?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower);
-     if (isPartnerCategory) return (item.code?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower));
+     if (type === 'banks') return item.accountNumber?.toLowerCase().includes(searchLower) || item.bankName?.toLowerCase().includes(searchLower) || item.address?.toLowerCase().includes(searchLower);
+     if (type === 'projects' || type === 'jobs') return item.code?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower);
+     if (isPartnerCategory) return (item.code?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower) || item.phone?.toLowerCase().includes(searchLower) || item.contactPerson?.toLowerCase().includes(searchLower) || item.address?.toLowerCase().includes(searchLower));
      if (type === 'products') return (item.code?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower));
      if (type === 'legal-docs') return (item.number?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower));
      if (['currencies', 'units', 'voucher-types', 'warehouses', 'expense-items'].includes(type || '')) {
@@ -149,12 +154,13 @@ const Categories: React.FC = () => {
   const handleAddNew = () => {
     setEditingItem(null);
     if (type === 'accounts') setFormData({ code: '', name: '', category: 'ASSET' });
-    else if (type === 'banks') setFormData({ accountNumber: '', bankName: '', branch: '', currency: 'VND', accountHolder: '' });
-    else if (type === 'customers') setFormData({ code: '', name: '', type: 'CUSTOMER', taxCode: '', address: '', phone: '' });
-    else if (type === 'suppliers') setFormData({ code: '', name: '', type: 'SUPPLIER', taxCode: '', address: '', phone: '' });
-    else if (type === 'employees') setFormData({ code: '', name: '', type: 'EMPLOYEE', taxCode: '', address: '', phone: '' });
+    else if (type === 'banks') setFormData({ accountNumber: '', bankName: '', branch: '', currency: 'VND', accountHolder: '', phoneNumber: '', contactPerson: '', address: '' });
+    else if (type === 'customers') setFormData({ code: '', name: '', type: 'CUSTOMER', taxCode: '', address: '', phone: '', contactPerson: '' });
+    else if (type === 'suppliers') setFormData({ code: '', name: '', type: 'SUPPLIER', taxCode: '', address: '', phone: '', contactPerson: '' });
+    else if (type === 'employees') setFormData({ code: '', name: '', type: 'EMPLOYEE', taxCode: '', address: '', phone: '', contactPerson: '' });
     else if (type === 'products') setFormData({ code: '', name: '', unit: 'Cái', price: 0, stock: 0 });
     else if (type === 'projects') setFormData({ code: '', name: '', value: 0, status: 'ACTIVE', startDate: '' });
+    else if (type === 'jobs') setFormData({ code: '', name: '', status: 'ACTIVE' });
     else if (type === 'legal-docs') setFormData({ number: '', name: '', type: 'Thông tư', issueDate: '', effectiveDate: '', issuingAuthority: '', content: '', status: 'ACTIVE', fileName: '' });
     // New Categories Defaults
     else if (type === 'currencies') setFormData({ code: '', name: '', exchangeRate: 1, isDefault: false });
@@ -185,6 +191,7 @@ const Categories: React.FC = () => {
       case 'partners': deletePartner(item.id); break;
       case 'products': deleteProduct(item.id); break;
       case 'projects': deleteProject(item.id); break;
+      case 'jobs': deleteJob(item.id); break;
       case 'legal-docs': deleteLegalDocument(item.id); break;
       case 'currencies': deleteCurrency(item.id); break;
       case 'units': deleteUnit(item.id); break;
@@ -222,6 +229,9 @@ const Categories: React.FC = () => {
     } else if (type === 'projects') {
        if (editingItem) updateProject(editingItem.id, formData);
        else addProject(formData);
+    } else if (type === 'jobs') {
+       if (editingItem) updateJob(editingItem.id, formData);
+       else addJob(formData);
     } else if (type === 'legal-docs') {
       if (editingItem) updateLegalDocument(editingItem.id, formData);
       else addLegalDocument(formData);
@@ -399,7 +409,9 @@ const Categories: React.FC = () => {
                                 <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.bankName}</td>
                                 <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.branch}</td>
                                 <td className="px-6 py-3 font-medium border border-gray-200">{item.currency}</td>
-                                <td className="px-6 py-3 text-gray-600 border border-gray-200 truncate max-w-xs">{item.accountHolder}</td>
+                                <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.contactPerson || '-'}</td>
+                                <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.phoneNumber || '-'}</td>
+                                <td className="px-6 py-3 text-gray-600 border border-gray-200 max-w-xs truncate" title={item.address}>{item.address || '-'}</td>
                             </>
                             )}
 
@@ -407,21 +419,19 @@ const Categories: React.FC = () => {
                             <>
                                 <td className="px-6 py-3 font-medium border border-gray-200">{item.code || 'AUTO'}</td>
                                 <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.name}</td>
-                                <td className="px-6 py-3 text-gray-500 border border-gray-200">
-                                    {type === 'employees' ? (item.phone || '-') : (item.taxCode || '-')}
-                                </td>
-                                {(type === 'customers' || type === 'suppliers' || type === 'employees') ? (
-                                    <td className="px-6 py-3 text-gray-600 border border-gray-200 truncate max-w-xs">{item.address}</td>
+                                {type === 'employees' ? (
+                                    <>
+                                        <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.phone || '-'}</td>
+                                        <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.contactPerson || '-'}</td>
+                                        <td className="px-6 py-3 text-gray-600 border border-gray-200 truncate max-w-xs">{item.address}</td>
+                                    </>
                                 ) : (
-                                    <td className="px-6 py-3 border border-gray-200">
-                                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                            item.type === 'CUSTOMER' ? 'bg-blue-100 text-blue-700' : 
-                                            item.type === 'SUPPLIER' ? 'bg-orange-100 text-orange-700' : 
-                                            item.type === 'EMPLOYEE' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'
-                                        }`}>
-                                            {item.type}
-                                        </span>
-                                    </td>
+                                    <>
+                                        <td className="px-6 py-3 text-gray-500 border border-gray-200">{item.taxCode || '-'}</td>
+                                        <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.contactPerson || '-'}</td>
+                                        <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.phone || '-'}</td>
+                                        <td className="px-6 py-3 text-gray-600 border border-gray-200 truncate max-w-xs">{item.address || '-'}</td>
+                                    </>
                                 )}
                             </>
                             )}
@@ -441,6 +451,18 @@ const Categories: React.FC = () => {
                                 <td className="px-6 py-3 font-medium border border-gray-200">{item.code}</td>
                                 <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.name}</td>
                                 <td className="px-6 py-3 font-mono text-gray-700 border border-gray-200">{item.value?.toLocaleString('vi-VN')}</td>
+                                <td className="px-6 py-3 border border-gray-200">
+                                   <span className={`px-2 py-1 rounded text-xs font-medium ${item.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                        {item.status === 'ACTIVE' ? 'Đang thực hiện' : 'Đã hoàn thành'}
+                                    </span>
+                                </td>
+                            </>
+                            )}
+
+                            {type === 'jobs' && (
+                            <>
+                                <td className="px-6 py-3 font-medium border border-gray-200">{item.code}</td>
+                                <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.name}</td>
                                 <td className="px-6 py-3 border border-gray-200">
                                    <span className={`px-2 py-1 rounded text-xs font-medium ${item.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                                         {item.status === 'ACTIVE' ? 'Đang thực hiện' : 'Đã hoàn thành'}
@@ -473,7 +495,7 @@ const Categories: React.FC = () => {
                                 <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.effectiveDate || item.issueDate}</td>
                                 <td className="px-6 py-3 border border-gray-200">
                                     <span className={`px-2 py-1 rounded text-xs font-medium ${item.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                        {item.status === 'ACTIVE' ? 'Hiệu lực' : 'Hết hiệu lực'}
+                                        {item.status === 'ACTIVE' ? 'Đang hiệu lực' : 'Hết hiệu lực'}
                                     </span>
                                 </td>
                             </>
@@ -581,19 +603,19 @@ const Categories: React.FC = () => {
               {/* RENDER INPUTS BASED ON TYPE */}
               
               {/* Generic Code/Name for simple types */}
-              {['units', 'voucher-types', 'warehouses', 'expense-items'].includes(type || '') && (
+              {['units', 'voucher-types', 'warehouses', 'expense-items', 'jobs'].includes(type || '') && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Mã <span className="text-red-500">*</span></label>
                     <input 
                       value={formData.code || ''}
                       onChange={e => setFormData({...formData, code: e.target.value})}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                      placeholder="VD: KG, KHO1..."
+                      placeholder="VD: VV01, KG, KHO1..."
                     />
                   </div>
               )}
               
-              {['units', 'voucher-types', 'warehouses', 'expense-items', 'currencies'].includes(type || '') && (
+              {['units', 'voucher-types', 'warehouses', 'expense-items', 'currencies', 'jobs'].includes(type || '') && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Tên hiển thị <span className="text-red-500">*</span></label>
                     <input 
@@ -605,6 +627,21 @@ const Categories: React.FC = () => {
               )}
 
               {/* Specific Inputs */}
+              {type === 'jobs' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+                    <select 
+                      value={formData.status || 'ACTIVE'}
+                      onChange={e => setFormData({...formData, status: e.target.value})}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                        <option value="ACTIVE">Đang thực hiện</option>
+                        <option value="COMPLETED">Đã hoàn thành</option>
+                        <option value="PENDING">Tạm dừng</option>
+                    </select>
+                  </div>
+              )}
+
               {type === 'currencies' && (
                   <>
                     <div className="grid grid-cols-2 gap-4">
@@ -760,6 +797,32 @@ const Categories: React.FC = () => {
                             </select>
                         </div>
                     </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Người liên hệ</label>
+                            <input 
+                                value={formData.contactPerson || ''}
+                                onChange={e => setFormData({...formData, contactPerson: e.target.value})}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
+                            <input 
+                                value={formData.phoneNumber || ''}
+                                onChange={e => setFormData({...formData, phoneNumber: e.target.value})}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ chi nhánh/PGD</label>
+                        <input 
+                            value={formData.address || ''}
+                            onChange={e => setFormData({...formData, address: e.target.value})}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                        />
+                    </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Chủ tài khoản</label>
                         <input 
@@ -861,6 +924,24 @@ const Categories: React.FC = () => {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                       />
                    </div>
+                   <div className="grid grid-cols-2 gap-4">
+                      <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Người liên hệ</label>
+                          <input 
+                              value={formData.contactPerson || ''}
+                              onChange={e => setFormData({...formData, contactPerson: e.target.value})}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Điện thoại</label>
+                          <input 
+                              value={formData.phone || ''}
+                              onChange={e => setFormData({...formData, phone: e.target.value})}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                          />
+                      </div>
+                   </div>
                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {type === 'employees' ? 'MST Thu nhập cá nhân' : 'Mã số thuế'}
@@ -868,14 +949,6 @@ const Categories: React.FC = () => {
                       <input 
                         value={formData.taxCode || ''}
                         onChange={e => setFormData({...formData, taxCode: e.target.value})}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                   </div>
-                   <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Điện thoại</label>
-                      <input 
-                        value={formData.phone || ''}
-                        onChange={e => setFormData({...formData, phone: e.target.value})}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                       />
                    </div>

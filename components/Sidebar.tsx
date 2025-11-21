@@ -24,7 +24,8 @@ import {
   Scale,
   Ticket,
   Warehouse,
-  PieChart
+  PieChart,
+  ClipboardList
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -64,7 +65,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
       icon: Calculator,
       path: '#',
       subItems: [
-        { id: 'op-cash', label: 'Quỹ (Tiền mặt)', icon: CreditCard, path: '/operations/cash' },
+        { id: 'op-cash', label: 'Quỹ', icon: CreditCard, path: '/operations/cash' },
         { id: 'op-bank', label: 'Ngân hàng', icon: Landmark, path: '/operations/bank' },
         { id: 'op-business', label: 'Mua / Bán / Kho', icon: Briefcase, path: '/operations/business' },
         { id: 'op-assets', label: 'TSCĐ & CCDC', icon: Package, path: '/operations/assets' },
@@ -96,6 +97,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
         { id: 'cat-employee', label: 'Nhân viên', icon: User, path: '/categories/employees' },
         { id: 'cat-product', label: 'Vật tư hàng hóa', icon: Package, path: '/categories/products' },
         { id: 'cat-project', label: 'Công trình', icon: HardHat, path: '/categories/projects' },
+        { id: 'cat-job', label: 'Vụ việc', icon: ClipboardList, path: '/categories/jobs' },
         { id: 'cat-legal', label: 'Văn bản pháp luật', icon: Book, path: '/categories/legal-docs' },
         { id: 'cat-currency', label: 'Danh sách tiền tệ', icon: Coins, path: '/categories/currencies' },
         { id: 'cat-unit', label: 'Đơn vị tính', icon: Scale, path: '/categories/units' },

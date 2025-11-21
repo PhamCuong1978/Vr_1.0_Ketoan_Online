@@ -15,6 +15,7 @@ QUYỀN TRUY CẬP DỮ LIỆU & HỌC TẬP:
     4.  **Tài khoản (accounts)**: Hệ thống tài khoản kế toán.
     5.  **Văn bản pháp luật (legal_documents)**: Các thông tư, nghị định đã được lưu để tham chiếu.
     6.  **Thông tin công ty (company_info)**: Tên, địa chỉ, MST, giám đốc.
+    7.  **Vụ việc (jobs)**: Danh sách các vụ việc đang thực hiện.
 *   Khi người dùng hỏi về bất kỳ thông tin nào (ví dụ: "Quy định về hóa đơn hiện tại thế nào?", "Tình hình kinh doanh tháng này ra sao?"), hãy CHỦ ĐỘNG gọi tool \`get_database_data\` để lấy dữ liệu mới nhất, đọc hiểu và trả lời.
 
 QUY TRÌNH LÀM VIỆC (TUÂN THỦ TUYỆT ĐỐI):
@@ -28,7 +29,7 @@ QUY TRÌNH LÀM VIỆC (TUÂN THỦ TUYỆT ĐỐI):
 
 CÁC CÔNG CỤ (TOOLS):
 *   \`get_database_data\`: Cổng truy xuất dữ liệu vạn năng.
-*   \`create_transaction\`, \`delete_transaction\`, \`manage_partner\`, \`manage_product\`, \`manage_account\`, \`update_company_info\`: Các công cụ tác nghiệp.
+*   \`create_transaction\`, \`delete_transaction\`, \`manage_partner\`, \`manage_product\`, \`manage_account\`, \`manage_job\`, \`update_company_info\`: Các công cụ tác nghiệp.
 
 Lưu ý giao tiếp:
 - Luôn xưng "Em", gọi "Anh Cường".
@@ -112,6 +113,21 @@ const tools: FunctionDeclaration[] = [
     }
   },
   {
+    name: "manage_job",
+    description: "Quản lý (Thêm/Sửa/Xóa) danh mục Vụ việc.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        action: { type: Type.STRING, description: "'create', 'update', hoặc 'delete'" },
+        id: { type: Type.STRING, description: "ID vụ việc (bắt buộc nếu update/delete)" },
+        code: { type: Type.STRING, description: "Mã vụ việc" },
+        name: { type: Type.STRING, description: "Tên vụ việc" },
+        status: { type: Type.STRING, description: "Trạng thái: ACTIVE, COMPLETED, PENDING" }
+      },
+      required: ["action"]
+    }
+  },
+  {
     name: "update_company_info",
     description: "Cập nhật thông tin của doanh nghiệp.",
     parameters: {
@@ -133,7 +149,7 @@ const tools: FunctionDeclaration[] = [
           properties: {
             entity: { 
               type: Type.STRING, 
-              description: "Loại dữ liệu cần lấy: 'transactions', 'partners', 'products', 'accounts', 'legal_documents', 'company_info'" 
+              description: "Loại dữ liệu cần lấy: 'transactions', 'partners', 'products', 'accounts', 'legal_documents', 'company_info', 'jobs'" 
             }
           },
           required: ["entity"]
@@ -255,6 +271,7 @@ export class AIController {
           if (args.entity === 'accounts') return JSON.stringify(this.dataContext.accounts);
           if (args.entity === 'legal_documents') return JSON.stringify(this.dataContext.legalDocuments);
           if (args.entity === 'company_info') return JSON.stringify(this.dataContext.companyInfo);
+          if (args.entity === 'jobs') return JSON.stringify(this.dataContext.jobs);
           return "Entity not found or not supported";
         }
 
@@ -273,12 +290,20 @@ export class AIController {
              if (p) pId = p.id;
           }
 
+          // Default voucher type based on transaction type
+          let vType = 'PT';
+          if (args.type === 'PAYMENT') vType = 'PC';
+          else if (args.type === 'SALES' || args.type === 'PURCHASE') vType = 'PK';
+
           const newTrans = {
               date: args.date || new Date().toISOString().split('T')[0],
+              accountingDate: args.date || new Date().toISOString().split('T')[0],
               type: typeMap[args.type] || TransactionType.OTHER,
+              voucherType: vType,
               documentNo: `AUTO-${Math.floor(Math.random()*10000)}`,
               description: args.description,
               totalAmount: Number(args.amount),
+              status: 'RECORDED' as const,
               details: [], 
               partnerId: pId
           };
@@ -348,6 +373,24 @@ export class AIController {
               return "Đã xóa tài khoản.";
           }
           return "Thiếu Mã TK hoặc hành động không hợp lệ.";
+        }
+        
+        case "manage_job": {
+            if (args.action === 'create') {
+               const id = this.dataContext.addJob({
+                 code: args.code || `VV${Math.floor(Math.random()*1000)}`,
+                 name: args.name,
+                 status: args.status || 'ACTIVE'
+               });
+               return `Đã thêm vụ việc. ID: ${id}`;
+            } else if (args.action === 'update' && args.id) {
+               this.dataContext.updateJob(args.id, args);
+               return "Đã cập nhật vụ việc.";
+            } else if (args.action === 'delete' && args.id) {
+               this.dataContext.deleteJob(args.id);
+               return "Đã xóa vụ việc.";
+            }
+            return "Thiếu ID hoặc hành động không hợp lệ.";
         }
 
         case "update_company_info": {

@@ -1,5 +1,4 @@
 
-
 export enum TransactionType {
   RECEIPT = 'PT', // Thu
   PAYMENT = 'PC', // Chi
@@ -34,6 +33,7 @@ export interface Partner {
   taxCode?: string;
   address?: string;
   phone?: string;
+  contactPerson?: string; // Người liên hệ
   type: 'CUSTOMER' | 'SUPPLIER' | 'EMPLOYEE' | 'OTHER';
 }
 
@@ -51,8 +51,11 @@ export interface BankAccount {
   accountNumber: string;
   bankName: string;
   branch: string;
+  address?: string; // Địa chỉ chi nhánh/PGD
   currency: string;
   accountHolder?: string;
+  phoneNumber?: string; // Số điện thoại ngân hàng/hotline
+  contactPerson?: string; // Người liên hệ tại ngân hàng
 }
 
 export interface Project {
@@ -61,6 +64,14 @@ export interface Project {
   name: string;
   value: number;
   startDate?: string;
+  status: 'ACTIVE' | 'COMPLETED' | 'PENDING';
+}
+
+// --- Thêm Interface Job (Vụ việc) ---
+export interface Job {
+  id: string;
+  code: string; // Mã Vụ việc
+  name: string; // Tên Vụ việc
   status: 'ACTIVE' | 'COMPLETED' | 'PENDING';
 }
 
@@ -116,21 +127,28 @@ export interface ExpenseItem {
 export interface TransactionDetail {
   itemId?: string;
   description: string;
-  accountCode: string; // TK Nợ/Có đối ứng
+  debitAccount: string; // Tài khoản nợ (TK Nợ)
+  creditAccount: string; // Tài khoản có (TK Có)
   quantity: number;
   price: number;
   amount: number;
+  expenseItemId?: string; // Khoản mục CP
+  projectId?: string; // Mã CT (Công trình)
+  jobId?: string; // Mã VV (Vụ việc)
 }
 
 export interface Transaction {
   id: string;
-  date: string;
+  accountingDate: string; // 1. Ngày hạch toán
+  date: string; // 2. Ngày CT
   type: TransactionType;
-  documentNo: string; // Số chứng từ
-  description: string;
-  partnerId?: string; // Khách hàng/NCC/NV
-  totalAmount: number;
-  details: TransactionDetail[];
+  voucherType: string; // 3. Mã CT (Loại chứng từ)
+  documentNo: string; // 4. Số CT
+  description: string; // 5. Diễn giải
+  partnerId?: string; // 6. Đối tượng
+  totalAmount: number; // 9. Số tiền (Tổng)
+  status: 'RECORDED' | 'UNRECORDED'; // 13. Trạng thái
+  details: TransactionDetail[]; // Chứa TK Nợ, TK Có, KMCP, Mã CT, Mã VV
 }
 
 export interface MenuItem {
@@ -186,6 +204,12 @@ export interface DataContextType {
   addProject: (project: Omit<Project, 'id'>) => string;
   updateProject: (id: string, project: Partial<Project>) => void;
   deleteProject: (id: string) => void;
+
+  // Jobs (Vụ việc)
+  jobs: Job[];
+  addJob: (job: Omit<Job, 'id'>) => string;
+  updateJob: (id: string, job: Partial<Job>) => void;
+  deleteJob: (id: string) => void;
 
   legalDocuments: LegalDocument[];
   addLegalDocument: (doc: Omit<LegalDocument, 'id'>) => string;

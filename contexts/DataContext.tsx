@@ -1,15 +1,14 @@
 
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { 
   CompanyInfo, Transaction, Partner, Product, Account, LegalDocument, BankAccount, Project,
-  Currency, Unit, VoucherType, Warehouse, ExpenseItem,
+  Currency, Unit, VoucherType, Warehouse, ExpenseItem, Job,
   DataContextType, TransactionType 
 } from '../types';
 import { 
   INITIAL_COMPANY_INFO, MOCK_TRANSACTIONS, MOCK_PARTNERS, 
   MOCK_PRODUCTS, MOCK_ACCOUNTS, MOCK_LEGAL_DOCUMENTS, MOCK_BANK_ACCOUNTS, MOCK_PROJECTS,
-  MOCK_CURRENCIES, MOCK_UNITS, MOCK_VOUCHER_TYPES, MOCK_WAREHOUSES, MOCK_EXPENSE_ITEMS
+  MOCK_CURRENCIES, MOCK_UNITS, MOCK_VOUCHER_TYPES, MOCK_WAREHOUSES, MOCK_EXPENSE_ITEMS, MOCK_JOBS
 } from '../constants';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -40,7 +39,8 @@ const STORAGE_KEYS = {
   UNITS: 'ketoan_units',
   VOUCHER_TYPES: 'ketoan_voucher_types',
   WAREHOUSES: 'ketoan_warehouses',
-  EXPENSE_ITEMS: 'ketoan_expense_items'
+  EXPENSE_ITEMS: 'ketoan_expense_items',
+  JOBS: 'ketoan_jobs'
 };
 
 // Helper to load data from localStorage or fall back to mock data
@@ -86,6 +86,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [voucherTypes, setVoucherTypes] = useState<VoucherType[]>(() => loadFromStorage(STORAGE_KEYS.VOUCHER_TYPES, MOCK_VOUCHER_TYPES));
   const [warehouses, setWarehouses] = useState<Warehouse[]>(() => loadFromStorage(STORAGE_KEYS.WAREHOUSES, MOCK_WAREHOUSES));
   const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>(() => loadFromStorage(STORAGE_KEYS.EXPENSE_ITEMS, MOCK_EXPENSE_ITEMS));
+  const [jobs, setJobs] = useState<Job[]>(() => loadFromStorage(STORAGE_KEYS.JOBS, MOCK_JOBS));
 
   // Effects to save data whenever it changes
   useEffect(() => {
@@ -126,6 +127,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   useEffect(() => localStorage.setItem(STORAGE_KEYS.VOUCHER_TYPES, JSON.stringify(voucherTypes)), [voucherTypes]);
   useEffect(() => localStorage.setItem(STORAGE_KEYS.WAREHOUSES, JSON.stringify(warehouses)), [warehouses]);
   useEffect(() => localStorage.setItem(STORAGE_KEYS.EXPENSE_ITEMS, JSON.stringify(expenseItems)), [expenseItems]);
+  useEffect(() => localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs)), [jobs]);
 
 
   const updateCompanyInfo = (info: Partial<CompanyInfo>) => {
@@ -225,6 +227,23 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     setProjects(prev => prev.filter(p => p.id !== id));
   };
 
+  // --- Jobs (Vụ việc) ---
+  const addJob = (data: Omit<Job, 'id'>) => {
+    const newId = Math.random().toString(36).substr(2, 9);
+    const newJob: Job = { ...data, id: newId };
+    setJobs(prev => [...prev, newJob]);
+    return newId;
+  };
+
+  const updateJob = (id: string, data: Partial<Job>) => {
+    setJobs(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+  };
+
+  const deleteJob = (id: string) => {
+    setJobs(prev => prev.filter(p => p.id !== id));
+  };
+
+
   // --- Legal Documents ---
   const addLegalDocument = (data: Omit<LegalDocument, 'id'>) => {
     const newId = Math.random().toString(36).substr(2, 9);
@@ -305,6 +324,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         if (Array.isArray(data.voucherTypes)) setVoucherTypes(data.voucherTypes);
         if (Array.isArray(data.warehouses)) setWarehouses(data.warehouses);
         if (Array.isArray(data.expenseItems)) setExpenseItems(data.expenseItems);
+        if (Array.isArray(data.jobs)) setJobs(data.jobs);
     } catch (e) {
         console.error("Import error:", e);
         throw new Error("Dữ liệu không hợp lệ");
@@ -344,6 +364,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     addProject,
     updateProject,
     deleteProject,
+
+    jobs,
+    addJob,
+    updateJob,
+    deleteJob,
 
     legalDocuments,
     addLegalDocument,
