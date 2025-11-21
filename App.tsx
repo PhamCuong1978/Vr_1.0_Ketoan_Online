@@ -7,13 +7,14 @@ import Operations from './pages/Operations';
 import Categories from './pages/Categories';
 import Reports from './pages/Reports';
 import System from './pages/System';
+import LegalDocViewer from './pages/LegalDocViewer';
 import AIAssistant from './components/AIAssistant';
 import { DataProvider } from './contexts/DataContext';
 import { Menu } from 'lucide-react';
 
 const App: React.FC = () => {
-  // Mặc định mở sidebar trên màn hình lớn
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // Mặc định đóng sidebar để không che nội dung (vì giờ là overlay)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -62,6 +63,9 @@ const App: React.FC = () => {
 
                 {/* Reports Routes */}
                 <Route path="/reports/:type" element={<Reports />} />
+
+                {/* Document Viewer Route */}
+                <Route path="/legal-doc/:id" element={<LegalDocViewer />} />
 
                 {/* Default Redirect */}
                 <Route path="*" element={<Navigate to="/" replace />} />

@@ -9,7 +9,6 @@ import {
   Database,
   ChevronDown,
   ChevronRight,
-  Menu,
   CreditCard,
   Briefcase,
   Users,
@@ -95,34 +94,40 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
 
   return (
     <>
-      {/* Sidebar Container 
-          - Desktop: Relative position to push content
-          - Mobile: Fixed position
-      */}
+      {/* Overlay - Active on ALL devices now */}
+      <div 
+        className={`
+          fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300
+          ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+        `}
+        onClick={toggleSidebar}
+        aria-hidden="true"
+      />
+
+      {/* Sidebar Container - Fixed on ALL devices */}
       <div
         className={`
-          fixed inset-y-0 left-0 z-30 bg-slate-900 text-slate-100 
-          transition-all duration-300 ease-in-out flex flex-col
-          lg:relative
+          fixed inset-y-0 left-0 z-50 bg-slate-900 text-slate-100 w-64 shadow-2xl
+          transition-transform duration-300 ease-in-out flex flex-col
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-          ${isOpen ? 'lg:w-64' : 'lg:w-0 lg:overflow-hidden lg:translate-x-0'}
         `}
       >
         {/* Inner Wrapper */}
-        <div className="w-64 h-full flex flex-col">
+        <div className="w-full h-full flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between h-16 px-4 bg-slate-800 border-b border-slate-700 shrink-0">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold">K</div>
                 <span className="text-lg font-semibold">Ketoan_Online</span>
               </div>
-              <button onClick={toggleSidebar} className="text-slate-400 hover:text-white lg:hidden">
+              {/* Close button visible on all devices now */}
+              <button onClick={toggleSidebar} className="text-slate-400 hover:text-white">
                 <X size={20} />
               </button>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto py-4 overflow-x-hidden">
+            <nav className="flex-1 overflow-y-auto py-4 overflow-x-hidden custom-scrollbar">
               <ul className="space-y-1 px-2">
                 {menuGroups.map((item) => (
                   <li key={item.id}>
@@ -144,6 +149,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                               <li key={sub.id}>
                                 <Link
                                   to={sub.path}
+                                  onClick={() => {
+                                    // Optional: Close sidebar on navigation on mobile or always
+                                    // toggleSidebar(); 
+                                  }}
                                   className={`flex items-center px-4 py-2 text-sm rounded-md transition-colors whitespace-nowrap ${isActive(sub.path) ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
                                 >
                                   {sub.label}
@@ -156,6 +165,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                     ) : (
                       <Link
                         to={item.path}
+                        onClick={() => {
+                            // Optional: Close sidebar on navigation on mobile or always
+                            // toggleSidebar(); 
+                        }}
                         className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${isActive(item.path) ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
                       >
                         <item.icon size={18} className="mr-3 min-w-[18px]" />

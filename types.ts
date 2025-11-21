@@ -126,4 +126,6 @@ export interface DataContextType {
   addLegalDocument: (doc: Omit<LegalDocument, 'id'>) => string;
   updateLegalDocument: (id: string, doc: Partial<LegalDocument>) => void;
   deleteLegalDocument: (id: string) => void;
+
+  importData: (data: any) => void;
 }

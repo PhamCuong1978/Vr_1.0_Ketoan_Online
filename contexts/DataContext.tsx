@@ -172,6 +172,26 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     setLegalDocuments(prev => prev.filter(d => d.id !== id));
   };
 
+  // --- Data Management ---
+  const importData = (data: any) => {
+    if (!data) return;
+
+    try {
+        if (data.companyInfo) setCompanyInfo(data.companyInfo);
+        if (Array.isArray(data.transactions)) setTransactions(data.transactions);
+        if (Array.isArray(data.partners)) setPartners(data.partners);
+        if (Array.isArray(data.products)) setProducts(data.products);
+        if (Array.isArray(data.accounts)) setAccounts(data.accounts);
+        if (Array.isArray(data.legalDocuments)) setLegalDocuments(data.legalDocuments);
+        
+        // Alert managed by UI component or here
+        // alert("Đã khôi phục dữ liệu thành công!");
+    } catch (e) {
+        console.error("Import error:", e);
+        throw new Error("Dữ liệu không hợp lệ");
+    }
+  };
+
   const value = {
     companyInfo,
     updateCompanyInfo,
@@ -199,7 +219,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     legalDocuments,
     addLegalDocument,
     updateLegalDocument,
-    deleteLegalDocument
+    deleteLegalDocument,
+
+    importData
   };
 
   return (
