@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Plus, Edit, Trash2, Search, X, Save, AlertCircle, FileText, UploadCloud, Calendar, Building2, Loader2, CheckCircle, Paperclip, ExternalLink } from 'lucide-react';
@@ -12,7 +13,14 @@ const Categories: React.FC = () => {
     accounts, addAccount, updateAccount, deleteAccount,
     partners, addPartner, updatePartner, deletePartner,
     products, addProduct, updateProduct, deleteProduct,
-    legalDocuments, addLegalDocument, updateLegalDocument, deleteLegalDocument
+    bankAccounts, addBankAccount, updateBankAccount, deleteBankAccount,
+    projects, addProject, updateProject, deleteProject,
+    legalDocuments, addLegalDocument, updateLegalDocument, deleteLegalDocument,
+    currencies, addCurrency, updateCurrency, deleteCurrency,
+    units, addUnit, updateUnit, deleteUnit,
+    voucherTypes, addVoucherType, updateVoucherType, deleteVoucherType,
+    warehouses, addWarehouse, updateWarehouse, deleteWarehouse,
+    expenseItems, addExpenseItem, updateExpenseItem, deleteExpenseItem
   } = useData();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,6 +41,7 @@ const Categories: React.FC = () => {
   let title = 'Danh mục';
   let data: any[] = [];
   let columns: string[] = [];
+  const isPartnerCategory = ['partners', 'customers', 'suppliers', 'employees'].includes(type || '');
 
   // Config based on type
   switch (type) {
@@ -41,20 +50,66 @@ const Categories: React.FC = () => {
       columns = ['Số TT', 'Số TK', 'Tên tài khoản', 'Tính chất']; // Columns handled manually for accounts
       data = accounts.sort((a, b) => a.code.localeCompare(b.code));
       break;
-    case 'partners':
-      title = 'Khách hàng & Nhà cung cấp';
-      columns = ['Mã', 'Tên đối tượng', 'Mã số thuế', 'Loại'];
-      data = partners;
+    case 'banks':
+      title = 'Tài khoản Ngân hàng';
+      columns = ['Số tài khoản', 'Ngân hàng', 'Chi nhánh', 'Loại tiền', 'Chủ tài khoản'];
+      data = bankAccounts;
+      break;
+    case 'customers':
+      title = 'Danh sách Khách hàng';
+      columns = ['Mã KH', 'Tên khách hàng', 'Mã số thuế', 'Địa chỉ'];
+      data = partners.filter(p => p.type === 'CUSTOMER');
+      break;
+    case 'suppliers':
+      title = 'Danh sách Nhà cung cấp';
+      columns = ['Mã NCC', 'Tên nhà cung cấp', 'Mã số thuế', 'Địa chỉ'];
+      data = partners.filter(p => p.type === 'SUPPLIER');
+      break;
+    case 'employees':
+      title = 'Danh sách Nhân viên';
+      columns = ['Mã NV', 'Tên nhân viên', 'Điện thoại', 'Địa chỉ'];
+      data = partners.filter(p => p.type === 'EMPLOYEE');
       break;
     case 'products':
       title = 'Vật tư hàng hóa';
       columns = ['Mã', 'Tên hàng', 'ĐVT', 'Đơn giá', 'Tồn kho'];
       data = products;
       break;
+    case 'projects':
+      title = 'Danh mục Công trình';
+      columns = ['Mã CT', 'Tên công trình', 'Giá trị', 'Trạng thái'];
+      data = projects;
+      break;
     case 'legal-docs':
       title = 'Văn bản Pháp luật';
       columns = ['Số hiệu', 'Tên văn bản', 'Cơ quan BH', 'Ngày hiệu lực', 'Trạng thái'];
       data = legalDocuments;
+      break;
+    // New Categories
+    case 'currencies':
+      title = 'Danh sách Tiền tệ';
+      columns = ['Mã tiền tệ', 'Tên tiền tệ', 'Tỷ giá quy đổi', 'Mặc định'];
+      data = currencies;
+      break;
+    case 'units':
+      title = 'Danh sách Đơn vị tính';
+      columns = ['Mã ĐVT', 'Tên đơn vị tính'];
+      data = units;
+      break;
+    case 'voucher-types':
+      title = 'Danh sách Loại chứng từ';
+      columns = ['Mã CT', 'Tên chứng từ', 'Mẫu in'];
+      data = voucherTypes;
+      break;
+    case 'warehouses':
+      title = 'Danh sách Kho';
+      columns = ['Mã kho', 'Tên kho', 'Địa chỉ'];
+      data = warehouses;
+      break;
+    case 'expense-items':
+      title = 'Khoản mục chi phí';
+      columns = ['Mã khoản mục', 'Tên khoản mục', 'Nhóm chi phí'];
+      data = expenseItems;
       break;
     default:
       title = 'Danh mục chung';
@@ -65,9 +120,14 @@ const Categories: React.FC = () => {
   const filteredData = data.filter((item: any) => {
      const searchLower = searchTerm.toLowerCase();
      if (type === 'accounts') return item.code.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower);
-     if (type === 'partners') return (item.code?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower));
+     if (type === 'banks') return item.accountNumber?.toLowerCase().includes(searchLower) || item.bankName?.toLowerCase().includes(searchLower);
+     if (type === 'projects') return item.code?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower);
+     if (isPartnerCategory) return (item.code?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower));
      if (type === 'products') return (item.code?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower));
      if (type === 'legal-docs') return (item.number?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower));
+     if (['currencies', 'units', 'voucher-types', 'warehouses', 'expense-items'].includes(type || '')) {
+        return (item.code?.toLowerCase().includes(searchLower) || item.name.toLowerCase().includes(searchLower));
+     }
      return false;
   });
 
@@ -89,9 +149,20 @@ const Categories: React.FC = () => {
   const handleAddNew = () => {
     setEditingItem(null);
     if (type === 'accounts') setFormData({ code: '', name: '', category: 'ASSET' });
-    else if (type === 'partners') setFormData({ code: '', name: '', type: 'CUSTOMER', taxCode: '', address: '', phone: '' });
+    else if (type === 'banks') setFormData({ accountNumber: '', bankName: '', branch: '', currency: 'VND', accountHolder: '' });
+    else if (type === 'customers') setFormData({ code: '', name: '', type: 'CUSTOMER', taxCode: '', address: '', phone: '' });
+    else if (type === 'suppliers') setFormData({ code: '', name: '', type: 'SUPPLIER', taxCode: '', address: '', phone: '' });
+    else if (type === 'employees') setFormData({ code: '', name: '', type: 'EMPLOYEE', taxCode: '', address: '', phone: '' });
     else if (type === 'products') setFormData({ code: '', name: '', unit: 'Cái', price: 0, stock: 0 });
+    else if (type === 'projects') setFormData({ code: '', name: '', value: 0, status: 'ACTIVE', startDate: '' });
     else if (type === 'legal-docs') setFormData({ number: '', name: '', type: 'Thông tư', issueDate: '', effectiveDate: '', issuingAuthority: '', content: '', status: 'ACTIVE', fileName: '' });
+    // New Categories Defaults
+    else if (type === 'currencies') setFormData({ code: '', name: '', exchangeRate: 1, isDefault: false });
+    else if (type === 'units') setFormData({ code: '', name: '' });
+    else if (type === 'voucher-types') setFormData({ code: '', name: '', template: '' });
+    else if (type === 'warehouses') setFormData({ code: '', name: '', address: '' });
+    else if (type === 'expense-items') setFormData({ code: '', name: '', group: 'SELLING' });
+    
     setIsModalOpen(true);
   };
 
@@ -102,27 +173,31 @@ const Categories: React.FC = () => {
   };
 
   const handleDelete = (item: any) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa "${item.name}" không?`)) return;
+    const name = item.name || item.bankName || item.accountNumber;
+    if (!window.confirm(`Bạn có chắc muốn xóa "${name}" không?`)) return;
 
     switch (type) {
-      case 'accounts':
-        deleteAccount(item.code);
-        break;
-      case 'partners':
-        deletePartner(item.id);
-        break;
-      case 'products':
-        deleteProduct(item.id);
-        break;
-      case 'legal-docs':
-        deleteLegalDocument(item.id);
-        break;
+      case 'accounts': deleteAccount(item.code); break;
+      case 'banks': deleteBankAccount(item.id); break;
+      case 'customers':
+      case 'suppliers':
+      case 'employees':
+      case 'partners': deletePartner(item.id); break;
+      case 'products': deleteProduct(item.id); break;
+      case 'projects': deleteProject(item.id); break;
+      case 'legal-docs': deleteLegalDocument(item.id); break;
+      case 'currencies': deleteCurrency(item.id); break;
+      case 'units': deleteUnit(item.id); break;
+      case 'voucher-types': deleteVoucherType(item.id); break;
+      case 'warehouses': deleteWarehouse(item.id); break;
+      case 'expense-items': deleteExpenseItem(item.id); break;
     }
   };
 
   const handleSave = () => {
     // Validation simple
-    if (!formData.name) return alert("Vui lòng nhập tên!");
+    if (type !== 'banks' && !formData.name) return alert("Vui lòng nhập tên!");
+    if (type === 'banks' && !formData.bankName) return alert("Vui lòng nhập tên ngân hàng!");
     if (type === 'accounts' && !formData.code) return alert("Vui lòng nhập số tài khoản!");
     if (type === 'legal-docs') {
         if (!formData.number) return alert("Vui lòng nhập số hiệu văn bản!");
@@ -132,19 +207,41 @@ const Categories: React.FC = () => {
     if (type === 'accounts') {
       if (editingItem) updateAccount(editingItem.code, formData);
       else {
-        // Check duplicate
         if (accounts.find(a => a.code === formData.code)) return alert("Số tài khoản đã tồn tại!");
         addAccount(formData);
       }
-    } else if (type === 'partners') {
+    } else if (type === 'banks') {
+       if (editingItem) updateBankAccount(editingItem.id, formData);
+       else addBankAccount(formData);
+    } else if (isPartnerCategory) {
       if (editingItem) updatePartner(editingItem.id, formData);
       else addPartner(formData);
     } else if (type === 'products') {
       if (editingItem) updateProduct(editingItem.id, formData);
       else addProduct(formData);
+    } else if (type === 'projects') {
+       if (editingItem) updateProject(editingItem.id, formData);
+       else addProject(formData);
     } else if (type === 'legal-docs') {
       if (editingItem) updateLegalDocument(editingItem.id, formData);
       else addLegalDocument(formData);
+    } 
+    // Save New Categories
+    else if (type === 'currencies') {
+      if (editingItem) updateCurrency(editingItem.id, formData);
+      else addCurrency(formData);
+    } else if (type === 'units') {
+      if (editingItem) updateUnit(editingItem.id, formData);
+      else addUnit(formData);
+    } else if (type === 'voucher-types') {
+      if (editingItem) updateVoucherType(editingItem.id, formData);
+      else addVoucherType(formData);
+    } else if (type === 'warehouses') {
+      if (editingItem) updateWarehouse(editingItem.id, formData);
+      else addWarehouse(formData);
+    } else if (type === 'expense-items') {
+      if (editingItem) updateExpenseItem(editingItem.id, formData);
+      else addExpenseItem(formData);
     }
 
     setIsModalOpen(false);
@@ -155,11 +252,10 @@ const Categories: React.FC = () => {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      // Save file name & Auto-fill name if empty
       setFormData((prev: any) => ({
         ...prev,
         name: prev.name || file.name,
-        fileName: file.name // Persist file name
+        fileName: file.name 
       }));
 
       if (file.type === "text/plain") {
@@ -172,7 +268,6 @@ const Categories: React.FC = () => {
           };
           reader.readAsText(file);
       } else {
-          // Handle PDF and DOC/DOCX via Gemini AI Extraction
           setIsReadingFile(true);
           try {
               const reader = new FileReader();
@@ -269,14 +364,12 @@ const Categories: React.FC = () => {
                       );
                   }
 
-                  // Logic for STT (Only for Level 1 accounts)
                   let sttDisplay = '';
                   if (type === 'accounts' && item.code.length === 3) {
                       sttCounter++;
                       sttDisplay = sttCounter.toString().padStart(2, '0');
                   }
                   
-                  // Use stable key if possible
                   const rowKey = item.id || item.code || idx;
 
                   return (
@@ -300,19 +393,36 @@ const Categories: React.FC = () => {
                             </>
                             )}
                             
-                            {type === 'partners' && (
+                            {type === 'banks' && (
+                            <>
+                                <td className="px-6 py-3 font-medium font-mono text-blue-600 border border-gray-200">{item.accountNumber}</td>
+                                <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.bankName}</td>
+                                <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.branch}</td>
+                                <td className="px-6 py-3 font-medium border border-gray-200">{item.currency}</td>
+                                <td className="px-6 py-3 text-gray-600 border border-gray-200 truncate max-w-xs">{item.accountHolder}</td>
+                            </>
+                            )}
+
+                            {isPartnerCategory && (
                             <>
                                 <td className="px-6 py-3 font-medium border border-gray-200">{item.code || 'AUTO'}</td>
                                 <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.name}</td>
-                                <td className="px-6 py-3 text-gray-500 border border-gray-200">{item.taxCode || '-'}</td>
-                                <td className="px-6 py-3 border border-gray-200">
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                    item.type === 'CUSTOMER' ? 'bg-blue-100 text-blue-700' : 
-                                    item.type === 'SUPPLIER' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700'
-                                }`}>
-                                    {item.type}
-                                </span>
+                                <td className="px-6 py-3 text-gray-500 border border-gray-200">
+                                    {type === 'employees' ? (item.phone || '-') : (item.taxCode || '-')}
                                 </td>
+                                {(type === 'customers' || type === 'suppliers' || type === 'employees') ? (
+                                    <td className="px-6 py-3 text-gray-600 border border-gray-200 truncate max-w-xs">{item.address}</td>
+                                ) : (
+                                    <td className="px-6 py-3 border border-gray-200">
+                                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                            item.type === 'CUSTOMER' ? 'bg-blue-100 text-blue-700' : 
+                                            item.type === 'SUPPLIER' ? 'bg-orange-100 text-orange-700' : 
+                                            item.type === 'EMPLOYEE' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'
+                                        }`}>
+                                            {item.type}
+                                        </span>
+                                    </td>
+                                )}
                             </>
                             )}
 
@@ -326,13 +436,25 @@ const Categories: React.FC = () => {
                             </>
                             )}
 
+                            {type === 'projects' && (
+                            <>
+                                <td className="px-6 py-3 font-medium border border-gray-200">{item.code}</td>
+                                <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.name}</td>
+                                <td className="px-6 py-3 font-mono text-gray-700 border border-gray-200">{item.value?.toLocaleString('vi-VN')}</td>
+                                <td className="px-6 py-3 border border-gray-200">
+                                   <span className={`px-2 py-1 rounded text-xs font-medium ${item.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                        {item.status === 'ACTIVE' ? 'Đang thực hiện' : 'Đã hoàn thành'}
+                                    </span>
+                                </td>
+                            </>
+                            )}
+
                             {type === 'legal-docs' && (
                             <>
                                 <td className="px-6 py-3 font-medium text-blue-600 border border-gray-200">
                                    <Link 
                                      to={`/legal-doc/${item.id}`} 
                                      className="flex items-center gap-2 hover:text-blue-800 hover:underline group/link"
-                                     title="Mở văn bản"
                                    >
                                       <FileText size={16} className="text-gray-400 group-hover/link:text-blue-600"/>
                                       {item.number}
@@ -352,6 +474,58 @@ const Categories: React.FC = () => {
                                 <td className="px-6 py-3 border border-gray-200">
                                     <span className={`px-2 py-1 rounded text-xs font-medium ${item.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                         {item.status === 'ACTIVE' ? 'Hiệu lực' : 'Hết hiệu lực'}
+                                    </span>
+                                </td>
+                            </>
+                            )}
+
+                            {type === 'currencies' && (
+                            <>
+                                <td className="px-6 py-3 font-bold border border-gray-200">{item.code}</td>
+                                <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.name}</td>
+                                <td className="px-6 py-3 font-mono border border-gray-200">{item.exchangeRate?.toLocaleString('vi-VN')}</td>
+                                <td className="px-6 py-3 border border-gray-200">
+                                   {item.isDefault ? <CheckCircle size={18} className="text-green-600" /> : '-'}
+                                </td>
+                            </>
+                            )}
+
+                            {type === 'units' && (
+                            <>
+                                <td className="px-6 py-3 font-bold border border-gray-200">{item.code}</td>
+                                <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.name}</td>
+                            </>
+                            )}
+
+                            {type === 'voucher-types' && (
+                            <>
+                                <td className="px-6 py-3 font-bold border border-gray-200">{item.code}</td>
+                                <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.name}</td>
+                                <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.template}</td>
+                            </>
+                            )}
+
+                            {type === 'warehouses' && (
+                            <>
+                                <td className="px-6 py-3 font-bold border border-gray-200">{item.code}</td>
+                                <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.name}</td>
+                                <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.address}</td>
+                            </>
+                            )}
+
+                            {type === 'expense-items' && (
+                            <>
+                                <td className="px-6 py-3 font-bold border border-gray-200">{item.code}</td>
+                                <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.name}</td>
+                                <td className="px-6 py-3 border border-gray-200">
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                        item.group === 'SELLING' ? 'bg-blue-100 text-blue-700' : 
+                                        item.group === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 
+                                        item.group === 'MANUFACTURING' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100'
+                                    }`}>
+                                        {item.group === 'SELLING' ? 'Chi phí bán hàng' : 
+                                         item.group === 'ADMIN' ? 'Chi phí quản lý' :
+                                         item.group === 'MANUFACTURING' ? 'Chi phí sản xuất' : 'Khác'}
                                     </span>
                                 </td>
                             </>
@@ -395,11 +569,7 @@ const Categories: React.FC = () => {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
               <h2 className="text-lg font-bold text-gray-800">
-                {editingItem ? 'Cập nhật' : 'Thêm mới'} {
-                  type === 'accounts' ? 'Tài khoản' : 
-                  type === 'partners' ? 'Đối tác' : 
-                  type === 'products' ? 'Sản phẩm' : 'Văn bản'
-                }
+                {editingItem ? 'Cập nhật' : 'Thêm mới'} {title}
               </h2>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200 transition-colors">
                 <X size={20} />
@@ -407,6 +577,110 @@ const Categories: React.FC = () => {
             </div>
 
             <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              
+              {/* RENDER INPUTS BASED ON TYPE */}
+              
+              {/* Generic Code/Name for simple types */}
+              {['units', 'voucher-types', 'warehouses', 'expense-items'].includes(type || '') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Mã <span className="text-red-500">*</span></label>
+                    <input 
+                      value={formData.code || ''}
+                      onChange={e => setFormData({...formData, code: e.target.value})}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                      placeholder="VD: KG, KHO1..."
+                    />
+                  </div>
+              )}
+              
+              {['units', 'voucher-types', 'warehouses', 'expense-items', 'currencies'].includes(type || '') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tên hiển thị <span className="text-red-500">*</span></label>
+                    <input 
+                      value={formData.name || ''}
+                      onChange={e => setFormData({...formData, name: e.target.value})}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+              )}
+
+              {/* Specific Inputs */}
+              {type === 'currencies' && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Mã tiền tệ</label>
+                            <input 
+                            value={formData.code || ''}
+                            onChange={e => setFormData({...formData, code: e.target.value})}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="USD, EUR..."
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Tỷ giá quy đổi</label>
+                            <input 
+                            type="number"
+                            value={formData.exchangeRate || 1}
+                            onChange={e => setFormData({...formData, exchangeRate: Number(e.target.value)})}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex items-center mt-2">
+                        <input 
+                            type="checkbox" 
+                            id="isDefault"
+                            checked={formData.isDefault || false}
+                            onChange={e => setFormData({...formData, isDefault: e.target.checked})}
+                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        />
+                        <label htmlFor="isDefault" className="ml-2 text-sm text-gray-700">Là đồng tiền hạch toán</label>
+                    </div>
+                  </>
+              )}
+
+              {type === 'voucher-types' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Mẫu in</label>
+                    <input 
+                      value={formData.template || ''}
+                      onChange={e => setFormData({...formData, template: e.target.value})}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                      placeholder="VD: Mẫu 01-TT"
+                    />
+                  </div>
+              )}
+
+              {type === 'warehouses' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ kho</label>
+                    <input 
+                      value={formData.address || ''}
+                      onChange={e => setFormData({...formData, address: e.target.value})}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+              )}
+
+              {type === 'expense-items' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nhóm chi phí</label>
+                    <select 
+                      value={formData.group || 'OTHER'}
+                      onChange={e => setFormData({...formData, group: e.target.value})}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                        <option value="SELLING">Chi phí Bán hàng (641)</option>
+                        <option value="ADMIN">Chi phí Quản lý (642)</option>
+                        <option value="MANUFACTURING">Chi phí Sản xuất (62x)</option>
+                        <option value="OTHER">Khác (811)</option>
+                    </select>
+                  </div>
+              )}
+
+              {/* --- Original Inputs Below (kept for existing categories) --- */}
+
               {type === 'accounts' && (
                 <>
                   <div>
@@ -445,7 +719,113 @@ const Categories: React.FC = () => {
                 </>
               )}
 
-              {type === 'partners' && (
+              {type === 'banks' && (
+                <>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Số tài khoản <span className="text-red-500">*</span></label>
+                        <input 
+                            value={formData.accountNumber || ''}
+                            onChange={e => setFormData({...formData, accountNumber: e.target.value})}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none font-mono"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Tên ngân hàng <span className="text-red-500">*</span></label>
+                        <input 
+                            value={formData.bankName || ''}
+                            onChange={e => setFormData({...formData, bankName: e.target.value})}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="VD: Techcombank"
+                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Chi nhánh</label>
+                            <input 
+                                value={formData.branch || ''}
+                                onChange={e => setFormData({...formData, branch: e.target.value})}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Loại tiền</label>
+                            <select 
+                                value={formData.currency || 'VND'}
+                                onChange={e => setFormData({...formData, currency: e.target.value})}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            >
+                                <option value="VND">VND</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Chủ tài khoản</label>
+                        <input 
+                            value={formData.accountHolder || ''}
+                            onChange={e => setFormData({...formData, accountHolder: e.target.value})}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                        />
+                    </div>
+                </>
+              )}
+
+              {type === 'projects' && (
+                <>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Mã công trình</label>
+                        <input 
+                            value={formData.code || ''}
+                            onChange={e => setFormData({...formData, code: e.target.value})}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="Tự động nếu để trống"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Tên công trình <span className="text-red-500">*</span></label>
+                        <input 
+                            value={formData.name || ''}
+                            onChange={e => setFormData({...formData, name: e.target.value})}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Giá trị công trình</label>
+                            <input 
+                                type="number"
+                                value={formData.value || 0}
+                                onChange={e => setFormData({...formData, value: Number(e.target.value)})}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-right"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+                            <select 
+                                value={formData.status || 'ACTIVE'}
+                                onChange={e => setFormData({...formData, status: e.target.value})}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            >
+                                <option value="ACTIVE">Đang thực hiện</option>
+                                <option value="COMPLETED">Đã hoàn thành</option>
+                                <option value="PENDING">Tạm dừng</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Ngày bắt đầu</label>
+                        <input 
+                            type="date"
+                            value={formData.startDate || ''}
+                            onChange={e => setFormData({...formData, startDate: e.target.value})}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                        />
+                    </div>
+                </>
+              )}
+
+              {isPartnerCategory && (
                 <>
                    <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -457,19 +837,21 @@ const Categories: React.FC = () => {
                           placeholder="Tự động nếu để trống"
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Loại</label>
-                        <select 
-                          value={formData.type || 'CUSTOMER'}
-                          onChange={e => setFormData({...formData, type: e.target.value})}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                        >
-                          <option value="CUSTOMER">Khách hàng</option>
-                          <option value="SUPPLIER">Nhà cung cấp</option>
-                          <option value="EMPLOYEE">Nhân viên</option>
-                          <option value="OTHER">Khác</option>
-                        </select>
-                      </div>
+                      {type === 'partners' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Loại</label>
+                            <select 
+                            value={formData.type || 'CUSTOMER'}
+                            onChange={e => setFormData({...formData, type: e.target.value})}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            >
+                            <option value="CUSTOMER">Khách hàng</option>
+                            <option value="SUPPLIER">Nhà cung cấp</option>
+                            <option value="EMPLOYEE">Nhân viên</option>
+                            <option value="OTHER">Khác</option>
+                            </select>
+                        </div>
+                      )}
                    </div>
                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Tên đối tác <span className="text-red-500">*</span></label>
@@ -480,7 +862,9 @@ const Categories: React.FC = () => {
                       />
                    </div>
                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Mã số thuế</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {type === 'employees' ? 'MST Thu nhập cá nhân' : 'Mã số thuế'}
+                      </label>
                       <input 
                         value={formData.taxCode || ''}
                         onChange={e => setFormData({...formData, taxCode: e.target.value})}

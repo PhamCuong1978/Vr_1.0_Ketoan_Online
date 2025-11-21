@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Brain, TrendingUp, TrendingDown, DollarSign, Landmark } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Landmark } from 'lucide-react';
 import { TransactionType } from '../types';
 import { useData } from '../contexts/DataContext';
 
@@ -39,21 +39,22 @@ const Dashboard: React.FC = () => {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="p-6 h-full flex flex-col gap-6 overflow-y-auto">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Tổng quan tài chính</h1>
           <p className="text-gray-500">Chào mừng trở lại, {companyInfo.director}</p>
         </div>
         <div className="flex space-x-2">
-          <button className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50">Làm mới</button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm">Báo cáo nhanh</button>
+          <button className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">Làm mới</button>
+          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm transition-colors">Báo cáo nhanh</button>
         </div>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      {/* Stat Cards Section - shrink-0 to maintain size */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 shrink-0">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Tổng Doanh thu</p>
@@ -66,7 +67,7 @@ const Dashboard: React.FC = () => {
           <span className="text-xs text-green-600 font-medium mt-2 inline-block">+12.5% so với tháng trước</span>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Tổng Chi phí</p>
@@ -79,7 +80,7 @@ const Dashboard: React.FC = () => {
           <span className="text-xs text-red-600 font-medium mt-2 inline-block">-2.4% so với tháng trước</span>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Tồn quỹ Tiền mặt</p>
@@ -92,7 +93,7 @@ const Dashboard: React.FC = () => {
           <span className="text-xs text-gray-400 font-medium mt-2 inline-block">Cập nhật vừa xong</span>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Tiền gửi Ngân hàng</p>
@@ -106,74 +107,71 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Biểu đồ Doanh thu - Chi phí</h3>
-          <div className="h-80">
+      {/* Charts Section - flex-1 to fill remaining space */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-[350px]">
+        {/* Bar Chart */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-full">
+          <h3 className="text-lg font-bold text-gray-800 mb-4 shrink-0">Biểu đồ Doanh thu - Chi phí</h3>
+          <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} />
-                <Tooltip cursor={{fill: '#f3f4f6'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'}} />
-                <Legend iconType="circle" />
-                <Bar dataKey="thu" name="Thu" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="chi" name="Chi" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280'}} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#6b7280'}} />
+                <Tooltip 
+                  cursor={{fill: '#f9fafb'}} 
+                  contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'}} 
+                />
+                <Legend iconType="circle" wrapperStyle={{paddingTop: '20px'}} />
+                <Bar dataKey="thu" name="Thu" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={32} />
+                <Bar dataKey="chi" name="Chi" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={32} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Cơ cấu Doanh thu</h3>
-          <div className="h-64">
+        {/* Pie Chart */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-full">
+          <h3 className="text-lg font-bold text-gray-800 mb-4 shrink-0">Cơ cấu Doanh thu</h3>
+          <div className="flex-1 w-full min-h-0 relative">
              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
+                    innerRadius="60%"
+                    outerRadius="85%"
                     paddingAngle={5}
                     dataKey="value"
                   >
                     {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} strokeWidth={0} />
                     ))}
                   </Pie>
                   <Tooltip />
-                  <Legend verticalAlign="bottom" height={36}/>
                 </PieChart>
              </ResponsiveContainer>
+             {/* Center Text Overlay */}
+             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-center">
+                    <span className="block text-2xl font-bold text-gray-800">100%</span>
+                    <span className="text-xs text-gray-500">Tổng</span>
+                </div>
+             </div>
           </div>
-          <div className="mt-4 space-y-3">
+          
+          {/* Custom Legend Section */}
+          <div className="mt-6 space-y-4 shrink-0">
               {pieData.map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center text-sm">
+                <div key={idx} className="flex justify-between items-center text-sm group">
                    <div className="flex items-center">
-                      <div className="w-3 h-3 rounded-full mr-2" style={{backgroundColor: COLORS[idx % COLORS.length]}}></div>
+                      <div className="w-3 h-3 rounded-full mr-3 transition-transform group-hover:scale-125" style={{backgroundColor: COLORS[idx % COLORS.length]}}></div>
                       <span className="text-gray-600">{item.name}</span>
                    </div>
-                   <span className="font-medium">{item.value}%</span>
+                   <span className="font-bold text-gray-800">{item.value}%</span>
                 </div>
               ))}
-          </div>
-        </div>
-      </div>
-
-      {/* AI Promotion Banner (Static, actual AI is in the floating button now) */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
-        <div className="absolute right-0 top-0 h-full w-1/3 bg-white/5 -skew-x-12"></div>
-        <div className="flex items-start gap-4 relative z-10">
-          <div className="p-3 bg-blue-500/20 rounded-lg backdrop-blur-sm border border-blue-500/30">
-            <Brain size={32} className="text-blue-400" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-xl font-bold mb-2">Trợ lý Kế toán AI đã sẵn sàng</h3>
-            <p className="text-slate-300 text-sm max-w-xl">
-                Sử dụng nút chat ở góc phải màn hình để tương tác với trợ lý ảo. Hỗ trợ nhập liệu bằng giọng nói, phân tích báo cáo và tự động hóa quy trình kế toán.
-            </p>
           </div>
         </div>
       </div>

@@ -16,7 +16,15 @@ import {
   Landmark,
   BookOpen,
   Book,
-  X
+  X,
+  Building2,
+  User,
+  HardHat,
+  Coins,
+  Scale,
+  Ticket,
+  Warehouse,
+  PieChart
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -29,8 +37,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
 
   const toggleMenu = (id: string) => {
-    setExpandedMenus(prev =>
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    // Accordion logic: 
+    // Nếu menu đang mở -> đóng lại (set mảng rỗng)
+    // Nếu menu đang đóng -> mở nó ra và đóng các menu khác (set mảng chỉ chứa id này)
+    setExpandedMenus(prev => 
+      prev.includes(id) ? [] : [id]
     );
   };
 
@@ -79,10 +90,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
       path: '#',
       subItems: [
         { id: 'cat-account', label: 'Hệ thống TK', icon: Database, path: '/categories/accounts' },
-        { id: 'cat-partner', label: 'Khách hàng/NCC', icon: Users, path: '/categories/partners' },
+        { id: 'cat-bank', label: 'Ngân hàng', icon: Landmark, path: '/categories/banks' },
+        { id: 'cat-customer', label: 'Khách hàng', icon: Users, path: '/categories/customers' },
+        { id: 'cat-supplier', label: 'Nhà cung cấp', icon: Building2, path: '/categories/suppliers' },
+        { id: 'cat-employee', label: 'Nhân viên', icon: User, path: '/categories/employees' },
         { id: 'cat-product', label: 'Vật tư hàng hóa', icon: Package, path: '/categories/products' },
+        { id: 'cat-project', label: 'Công trình', icon: HardHat, path: '/categories/projects' },
         { id: 'cat-legal', label: 'Văn bản pháp luật', icon: Book, path: '/categories/legal-docs' },
-        { id: 'cat-other', label: 'Danh mục khác', icon: Database, path: '/categories/others' },
+        { id: 'cat-currency', label: 'Danh sách tiền tệ', icon: Coins, path: '/categories/currencies' },
+        { id: 'cat-unit', label: 'Đơn vị tính', icon: Scale, path: '/categories/units' },
+        { id: 'cat-voucher', label: 'Mã chứng từ', icon: Ticket, path: '/categories/voucher-types' },
+        { id: 'cat-warehouse', label: 'Danh sách kho', icon: Warehouse, path: '/categories/warehouses' },
+        { id: 'cat-expense', label: 'Khoản mục chi phí', icon: PieChart, path: '/categories/expense-items' },
       ]
     },
   ];
@@ -155,6 +174,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                                   }}
                                   className={`flex items-center px-4 py-2 text-sm rounded-md transition-colors whitespace-nowrap ${isActive(sub.path) ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
                                 >
+                                  <sub.icon size={16} className="mr-2 opacity-70" />
                                   {sub.label}
                                 </Link>
                               </li>
