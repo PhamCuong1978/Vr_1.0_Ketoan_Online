@@ -182,70 +182,7 @@ export const MOCK_JOBS: Job[] = [
     { id: '2', code: 'VV002', name: 'Kiểm kê kho cuối năm', status: 'PENDING' }
 ];
 
-export const MOCK_TRANSACTIONS: Transaction[] = [
-  {
-    id: '1',
-    accountingDate: '2023-10-01',
-    date: '2023-10-01',
-    type: TransactionType.RECEIPT,
-    voucherType: 'PT',
-    documentNo: 'PT001',
-    description: 'Thu tiền bán hàng KH001',
-    partnerId: '1',
-    totalAmount: 50000000,
-    status: 'RECORDED',
-    details: [{ 
-      description: 'Thu tiền đợt 1', 
-      debitAccount: '111', 
-      creditAccount: '131', 
-      quantity: 1, 
-      price: 50000000, 
-      amount: 50000000 
-    }]
-  },
-  {
-    id: '2',
-    accountingDate: '2023-10-02',
-    date: '2023-10-02',
-    type: TransactionType.PAYMENT,
-    voucherType: 'PC',
-    documentNo: 'PC001',
-    description: 'Chi tiền điện nước tháng 9',
-    partnerId: '2',
-    totalAmount: 2000000,
-    status: 'RECORDED',
-    details: [{ 
-      description: 'Tiền điện', 
-      debitAccount: '642', 
-      creditAccount: '111', 
-      quantity: 1, 
-      price: 2000000, 
-      amount: 2000000,
-      expenseItemId: '2'
-    }]
-  },
-  {
-    id: '3',
-    accountingDate: '2023-10-05',
-    date: '2023-10-05',
-    type: TransactionType.SALES,
-    voucherType: 'BH',
-    documentNo: 'BH001',
-    description: 'Xuất bán Laptop Dell',
-    partnerId: '1',
-    totalAmount: 25000000,
-    status: 'RECORDED',
-    details: [{ 
-      itemId: '1', 
-      description: 'Laptop Dell XPS 13', 
-      debitAccount: '131', 
-      creditAccount: '511', 
-      quantity: 1, 
-      price: 25000000, 
-      amount: 25000000 
-    }]
-  }
-];
+export const MOCK_TRANSACTIONS: Transaction[] = [];
 
 export const MOCK_LEGAL_DOCUMENTS: LegalDocument[] = [
   {
