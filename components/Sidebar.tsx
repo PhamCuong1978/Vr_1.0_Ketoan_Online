@@ -27,7 +27,6 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
-  // Thay đổi trạng thái mặc định: [] để đóng tất cả các menu con lúc ban đầu
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
 
   const toggleMenu = (id: string) => {
@@ -96,15 +95,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
 
   return (
     <>
-      {/* Overlay - Visible on all screens when open to support click-outside-to-close */}
-      <div
-        className={`fixed inset-0 bg-black bg-opacity-50 z-20 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={toggleSidebar}
-      ></div>
-
       {/* Sidebar Container 
+          - Desktop: Relative position to push content
           - Mobile: Fixed position
-          - Desktop: Relative position to allow pushing content, but z-indexed above overlay
       */}
       <div
         className={`
@@ -115,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
           ${isOpen ? 'lg:w-64' : 'lg:w-0 lg:overflow-hidden lg:translate-x-0'}
         `}
       >
-        {/* Inner Wrapper - fixed width to prevent content squishing when parent width animates */}
+        {/* Inner Wrapper */}
         <div className="w-64 h-full flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between h-16 px-4 bg-slate-800 border-b border-slate-700 shrink-0">
@@ -123,8 +116,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                 <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold">K</div>
                 <span className="text-lg font-semibold">Ketoan_Online</span>
               </div>
-              {/* Close button visible on all screens now that it behaves like a drawer/modal */}
-              <button onClick={toggleSidebar} className="text-slate-400 hover:text-white">
+              <button onClick={toggleSidebar} className="text-slate-400 hover:text-white lg:hidden">
                 <X size={20} />
               </button>
             </div>

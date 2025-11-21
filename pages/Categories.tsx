@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Plus, Edit, Trash2, Search, X, Save, AlertCircle, FileText, UploadCloud, Calendar, Building2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, Save, AlertCircle, FileText, UploadCloud, Calendar, Building2, Loader2, CheckCircle, Paperclip } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { Account, Partner, Product, LegalDocument } from '../types';
+import { extractTextFromDocument } from '../services/geminiService';
 
 const Categories: React.FC = () => {
   const { type } = useParams<{ type: string }>();
@@ -18,6 +19,7 @@ const Categories: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState<any>({});
+  const [isReadingFile, setIsReadingFile] = useState(false);
 
   // Reset state when route changes
   useEffect(() => {
@@ -25,6 +27,7 @@ const Categories: React.FC = () => {
     setIsModalOpen(false);
     setEditingItem(null);
     setFormData({});
+    setIsReadingFile(false);
   }, [type]);
 
   let title = 'Danh mục';
@@ -88,7 +91,7 @@ const Categories: React.FC = () => {
     if (type === 'accounts') setFormData({ code: '', name: '', category: 'ASSET' });
     else if (type === 'partners') setFormData({ code: '', name: '', type: 'CUSTOMER', taxCode: '', address: '', phone: '' });
     else if (type === 'products') setFormData({ code: '', name: '', unit: 'Cái', price: 0, stock: 0 });
-    else if (type === 'legal-docs') setFormData({ number: '', name: '', type: 'Thông tư', issueDate: '', effectiveDate: '', issuingAuthority: '', content: '', status: 'ACTIVE' });
+    else if (type === 'legal-docs') setFormData({ number: '', name: '', type: 'Thông tư', issueDate: '', effectiveDate: '', issuingAuthority: '', content: '', status: 'ACTIVE', fileName: '' });
     setIsModalOpen(true);
   };
 
@@ -152,28 +155,50 @@ const Categories: React.FC = () => {
   };
 
   // Enhanced File Upload
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file) {
-          if (file.type === "text/plain") {
-             const reader = new FileReader();
-             reader.onload = (event) => {
-                 setFormData((prev: any) => ({
-                     ...prev,
-                     name: prev.name || file.name,
-                     content: event.target?.result as string
-                 }));
-             };
-             reader.readAsText(file);
-          } else {
-             // For binary files (PDF, Doc), we can't read content easily without libraries.
-             // We keep the placeholder but advise user.
-             setFormData((prev: any) => ({
-                 ...prev,
-                 name: prev.name || file.name,
-                 content: prev.content || `[File đính kèm: ${file.name}]\n\n(Lưu ý: Hệ thống chưa hỗ trợ đọc trực tiếp file PDF/Word. Để Trợ lý AI học chi tiết, anh/chị vui lòng Copy toàn bộ nội dung văn bản và DÁN đè vào ô này)`
-             }));
-             alert("Đã đính kèm file. Lưu ý: Với file PDF/Word, vui lòng copy nội dung văn bản dán vào ô Nội dung để Trợ lý AI có thể học được chi tiết nhé!");
+      if (!file) return;
+
+      // Save file name & Auto-fill name if empty
+      setFormData((prev: any) => ({
+        ...prev,
+        name: prev.name || file.name,
+        fileName: file.name // Persist file name
+      }));
+
+      if (file.type === "text/plain") {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+              setFormData((prev: any) => ({
+                  ...prev,
+                  content: event.target?.result as string
+              }));
+          };
+          reader.readAsText(file);
+      } else {
+          // Handle PDF and DOC/DOCX via Gemini AI Extraction
+          setIsReadingFile(true);
+          try {
+              const reader = new FileReader();
+              reader.readAsDataURL(file);
+              reader.onload = async () => {
+                  const base64Data = (reader.result as string).split(',')[1];
+                  try {
+                      const extractedText = await extractTextFromDocument(base64Data, file.type);
+                      setFormData((prev: any) => ({
+                          ...prev,
+                          content: extractedText
+                      }));
+                  } catch (error) {
+                      alert("Không thể đọc nội dung file. Vui lòng thử lại hoặc copy dán thủ công.");
+                      console.error(error);
+                  } finally {
+                      setIsReadingFile(false);
+                  }
+              };
+          } catch (err) {
+              console.error(err);
+              setIsReadingFile(false);
           }
       }
   };
@@ -311,7 +336,15 @@ const Categories: React.FC = () => {
                                    <FileText size={16} className="text-gray-400"/>
                                    {item.number}
                                 </td>
-                                <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">{item.name}</td>
+                                <td className="px-6 py-3 font-medium text-gray-800 border border-gray-200">
+                                    <div>{item.name}</div>
+                                    {item.fileName && (
+                                        <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                                            <Paperclip size={10} />
+                                            <span>{item.fileName}</span>
+                                        </div>
+                                    )}
+                                </td>
                                 <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.issuingAuthority}</td>
                                 <td className="px-6 py-3 text-gray-600 border border-gray-200">{item.effectiveDate || item.issueDate}</td>
                                 <td className="px-6 py-3 border border-gray-200">
@@ -612,18 +645,46 @@ const Categories: React.FC = () => {
                    </div>
                    
                    <div className="border-t pt-4 mt-2">
-                        <label className="block text-sm font-bold text-gray-800 mb-2">Nội dung văn bản (QUAN TRỌNG)</label>
-                        <p className="text-xs text-gray-500 mb-3">
-                            Để AI có thể "học" và trả lời chính xác các câu hỏi nghiệp vụ, vui lòng nhập đầy đủ nội dung văn bản vào ô dưới đây.
-                        </p>
+                        <div className="flex items-center justify-between mb-2">
+                           <div className="flex flex-col">
+                               <label className="block text-sm font-bold text-gray-800">Nội dung văn bản (QUAN TRỌNG)</label>
+                               <p className="text-xs text-gray-500">AI sẽ tự động đọc và điền khi bạn tải file lên</p>
+                           </div>
+                           
+                           {isReadingFile && (
+                             <span className="flex items-center text-xs text-blue-600 animate-pulse">
+                               <Loader2 size={12} className="mr-1 animate-spin" />
+                               Đang đọc tài liệu bằng AI...
+                             </span>
+                           )}
+                           {!isReadingFile && formData.content && formData.content.length > 100 && (
+                               <span className="flex items-center text-xs text-green-600">
+                                   <CheckCircle size={12} className="mr-1" />
+                                   Đã trích xuất nội dung
+                               </span>
+                           )}
+                        </div>
                         
-                        <div className="flex items-center gap-3 mb-3">
-                            <label className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg cursor-pointer transition-colors border border-blue-200">
-                                <UploadCloud size={18} />
-                                <span>Tải lên file (Text, PDF, Doc)</span>
-                                <input type="file" className="hidden" onChange={handleFileUpload} accept=".pdf,.doc,.docx,.txt"/>
-                            </label>
-                            <span className="text-xs text-gray-500 italic">Hỗ trợ tự động đọc file .txt</span>
+                        <div className="flex flex-col gap-2 mb-3">
+                            <div className="flex items-center gap-3">
+                                <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors border border-blue-200 ${isReadingFile ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-50 hover:bg-blue-100 text-blue-700'}`}>
+                                    {isReadingFile ? <Loader2 size={18} className="animate-spin" /> : <UploadCloud size={18} />}
+                                    <span>Tải lên file (PDF, Doc, Docx)</span>
+                                    <input 
+                                    type="file" 
+                                    className="hidden" 
+                                    onChange={handleFileUpload} 
+                                    accept=".pdf,.doc,.docx,.txt"
+                                    disabled={isReadingFile}
+                                    />
+                                </label>
+                                {formData.fileName && (
+                                    <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-100 px-3 py-2 rounded-lg">
+                                        <Paperclip size={14} />
+                                        <span className="max-w-[150px] truncate" title={formData.fileName}>{formData.fileName}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <textarea
@@ -631,6 +692,7 @@ const Categories: React.FC = () => {
                             onChange={e => setFormData({...formData, content: e.target.value})}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-gray-50 font-mono"
                             rows={10}
+                            disabled={isReadingFile}
                             placeholder="Dán nội dung chi tiết của văn bản vào đây. Ví dụ: Điều 1. Phạm vi điều chỉnh..."
                         />
                    </div>

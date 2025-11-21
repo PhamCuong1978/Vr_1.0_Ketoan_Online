@@ -55,6 +55,7 @@ export interface LegalDocument {
   issuingAuthority: string; // Cơ quan ban hành
   content: string; // Nội dung tóm tắt hoặc chi tiết (để AI đọc)
   status: 'ACTIVE' | 'EXPIRED' | 'REPLACED';
+  fileName?: string; // Tên file đã upload
 }
 
 export interface TransactionDetail {

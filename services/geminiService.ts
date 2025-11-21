@@ -141,6 +141,32 @@ const tools: FunctionDeclaration[] = [
   }
 ];
 
+/**
+ * Extracts text from a document (PDF/DOC) using Gemini's multimodal capabilities.
+ * This is a standalone helper for the Document Upload feature.
+ */
+export const extractTextFromDocument = async (base64Data: string, mimeType: string): Promise<string> => {
+  try {
+    const apiKey = process.env.API_KEY || '';
+    const ai = new GoogleGenAI({ apiKey });
+    
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: {
+        parts: [
+          { inlineData: { mimeType: mimeType, data: base64Data } },
+          { text: "Hãy đóng vai một công cụ OCR chuyên nghiệp. Nhiệm vụ của bạn là trích xuất TOÀN BỘ nội dung văn bản từ tài liệu đính kèm này. Hãy giữ nguyên định dạng, câu chữ. Chỉ trả về nội dung văn bản, không được thêm bất kỳ lời dẫn hay nhận xét nào." }
+        ]
+      }
+    });
+
+    return response.text || "";
+  } catch (error) {
+    console.error("Error extracting text from document:", error);
+    throw new Error("Không thể đọc tài liệu. Vui lòng kiểm tra lại file hoặc nhập thủ công.");
+  }
+};
+
 export class AIController {
   private ai: GoogleGenAI;
   private chatSession: any;
